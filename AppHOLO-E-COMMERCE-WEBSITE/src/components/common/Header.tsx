@@ -12,7 +12,8 @@ const Header = ({ title, onBackPress, showCart }:any) => {
       )}
       <Text style={styles.title}>{title}</Text>
       {showCart && (
-        <TouchableOpacity style={styles.cartButton}>
+        <TouchableOpacity style={styles.cartButton}
+        >
           <Ionicons name="cart-outline" size={24} color="black" />
         </TouchableOpacity>
       )}
