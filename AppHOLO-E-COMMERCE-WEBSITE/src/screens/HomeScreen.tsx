@@ -18,13 +18,13 @@ const HomeScreen = ({ navigation }:any) => {
     id: 1,
     name: 'Shoes',
     discount: '50% off',
-    image: 'https://example.com/shoes-image.jpg',
+    image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-desertedinurban-4462781.jpg?alt=media&token=1de69849-7e62-40ab-8060-43b30c436592',
   };
 
   const recommendedProducts = [
-    { id: 1, name: 'Shoes', price: 299, rating: 4.5, image: 'https://example.com/shoes-image.jpg' },
-    { id: 2, name: 'Tablet', price: 499, rating: 4.5, image: 'https://example.com/tablet-image.jpg' },
-    { id: 3, name: 'Pear', price: 4, rating: 4.5, image: 'https://example.com/pear-image.jpg' },
+    { id: 1, name: 'Shoes', price: 299, rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-lilartsy-1159670.jpg?alt=media&token=0e26c824-26d5-4a94-8d85-478d0048fbe0' },
+    { id: 2, name: 'Tablet', price: 499, rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/table%2Fpexels-ravindar-negi-2150635-3785868.jpg?alt=media&token=618f2e66-8880-499a-b280-73fa430087b7' },
+    { id: 3, name: 'Set đồ nam cá nhà bà tính', price: 499, rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/Fashion%2Fset%2Fpexels-pixabay-157675.jpg?alt=media&token=35e1bcdd-d528-4843-92e0-23c968f02a5b' },
   ];
 
   const handleCategoryPress = (category:any) => {
@@ -57,7 +57,7 @@ const HomeScreen = ({ navigation }:any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#f4f6f7',
   },
 });
 

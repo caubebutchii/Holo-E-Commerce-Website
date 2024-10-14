@@ -5,12 +5,13 @@ import SearchBar from '../components/common/SearchBar';
 import CategoryList from '../components/CategoryList';
 import ProductGrid from '../components/ProductGrid';
 type typeCategories = {
-    id:string,
-    name:string,
-    icon:string
+  id: string,
+  name: string,
+  icon: string
 }
-const ProductListingScreen = ({ navigation }:any) => {
-  const [selectedCategory, setSelectedCategory] = useState<typeCategories>();
+const ProductListingScreen = ({ navigation, category }: any) => {
+  const [selectedCategory, setSelectedCategory] = useState<typeCategories>(category);
+  console.log(selectedCategory);
 
   const categories = [
     { id: 1, name: 'Điện tử', icon: 'phone-portrait-outline' },
@@ -86,24 +87,26 @@ const ProductListingScreen = ({ navigation }:any) => {
     },
   ];
 
-  const handleCategoryPress = (category:any) => {
+  const handleCategoryPress = (category: any) => {
     setSelectedCategory(category);
     // Lọc sản phẩm dựa trên danh mục được chọn
     const filteredProducts = products.filter(product => product.category === category.name);
     // Cập nhật danh sách sản phẩm hiển thị (giả sử bạn có một state để lưu trữ sản phẩm hiển thị)
     // setDisplayedProducts(filteredProducts);
-    
+
     // Nếu bạn muốn điều hướng đến một màn hình mới với danh sách sản phẩm đã lọc:
     // navigation.navigate('FilteredProducts', { products: filteredProducts, category: category.name });
   };
 
-  const handleProductPress = (product:any) => {
+  const handleProductPress = (product: any) => {
     navigation.navigate('ProductDetails', { product });
   };
-
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
   return (
     <View style={styles.container}>
-      <Header title={selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"} showCart />
+      <Header onBackPress={handleBackPress} title={selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"} showCart />
       <SearchBar placeholder="Tìm kiếm sản phẩm" />
       <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
       <ProductGrid products={products} onProductPress={handleProductPress} />

@@ -28,6 +28,7 @@ const ProductDetailsScreen = ({ route, navigation }:any) => {
             <Ionicons name="star" size={16} color="#FFD700" />
             <Text style={styles.rating}>{product.rating} (99 reviews)</Text>
           </View>
+          <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.description}>{product.description}</Text>
           <View style={styles.sizeContainer}>
             <Text style={styles.sectionTitle}>Size</Text>
@@ -58,6 +59,7 @@ const ProductDetailsScreen = ({ route, navigation }:any) => {
         </View>
         <ReviewList productId={product.id} />
       </ScrollView>
+      
       <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
         <Text style={styles.addToCartButtonText}>Add to cart</Text>
       </TouchableOpacity>
@@ -119,6 +121,10 @@ const styles = StyleSheet.create({
   },
   selectedSize: {
     backgroundColor: '#007AFF',
+  },
+  name:{
+    fontWeight:'bold',
+    fontSize:25,
   },
   sizeButtonText: {
     color: '#007AFF',
