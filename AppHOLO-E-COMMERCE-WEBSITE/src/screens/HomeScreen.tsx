@@ -38,12 +38,14 @@ const HomeScreen = ({ navigation }:any) => {
   const handleSearch = (text:any) => {
     // Handle search functionality
   };
-
+  const handleFilter = ()=>{
+    navigation.navigate('filter')
+  }
   return (
     <ScrollView style={styles.container}>
       <Header title="All Deals" showCart />
-      <SearchBar placeholder="Search for product" onChangeText={handleSearch} />
-      <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
+      <SearchBar placeholder="Search for product" onChangeText={handleSearch} onPressFilter = {handleFilter} />
+      <CategoryList categories={categories} onCategoryPress={handleCategoryPress}  />
       <FeaturedBanner product={featuredProduct} onPress={() => handleProductPress(featuredProduct)} />
       <ProductGrid
         title="Recommended for you"

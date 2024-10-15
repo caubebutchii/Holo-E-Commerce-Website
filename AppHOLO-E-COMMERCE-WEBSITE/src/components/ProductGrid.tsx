@@ -8,7 +8,7 @@ const ProductGrid = ({ title, products, onProductPress }: any) => {
   );
 
   return (
-    <View style = {styles.container}>
+    <View style= {styles.container}>
       <Text style= {styles.title}>{title}</Text>
       <FlatList
         data={products}

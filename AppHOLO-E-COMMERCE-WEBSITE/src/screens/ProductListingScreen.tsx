@@ -109,7 +109,7 @@ const ProductListingScreen = ({ navigation, category }: any) => {
       <Header onBackPress={handleBackPress} title={selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"} showCart />
       <SearchBar placeholder="Tìm kiếm sản phẩm" />
       <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
-      <ProductGrid products={products} onProductPress={handleProductPress} />
+      <ProductGrid products={prodcuts} onProductPress={handleProductPress} />
     </View>
   );
 };
