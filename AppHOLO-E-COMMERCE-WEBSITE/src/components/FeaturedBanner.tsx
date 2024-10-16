@@ -4,7 +4,7 @@ import { View, Text, ImageBackground, TouchableOpacity, StyleSheet } from 'react
 const FeaturedBanner = ({ product, onPress }:any) => {
   return (
     <TouchableOpacity onPress={onPress}>
-      <ImageBackground source={{ uri: product.image }} style={styles.banner}>
+      <ImageBackground source={{ uri: product.image }} style={styles.banner} resizeMode='cover'>
         <View style={styles.overlay}>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.discount}>{product.discount}</Text>
