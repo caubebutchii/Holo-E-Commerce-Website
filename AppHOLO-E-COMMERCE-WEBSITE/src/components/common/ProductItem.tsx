@@ -3,7 +3,6 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProductItem = ({ product, onPress }: any) => {
-  console.log(product.price);
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <Image source={{ uri: product.image }} style={styles.image} resizeMode='cover' />

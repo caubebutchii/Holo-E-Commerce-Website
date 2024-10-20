@@ -57,7 +57,7 @@ const ProductDetailsScreen = ({ route, navigation }:any) => {
             </View>
           </View>
         </View>
-        <ReviewList productId={product.id} />
+        {/* <ReviewList productId={product.id} /> */}
       </ScrollView>
       
       <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
