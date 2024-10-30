@@ -20,4 +20,4 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log('Firebase initialized successfully without firestore')
-export { db};
+export { app,db};

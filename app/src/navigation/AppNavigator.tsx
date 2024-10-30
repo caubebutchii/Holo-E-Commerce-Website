@@ -7,12 +7,18 @@ import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import CheckoutScreen from '../screens/CheckOutScreen';
 import FilterScreen from '../screens/FilterScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
+import BottomTabNavigator from './BottomTabNavigator';
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
   return (
     <NavigationContainer independent={true}>
       <Stack.Navigator screenOptions={{ headerShown: false }} >
+      <Stack.Screen 
+          name="Main" 
+          component={BottomTabNavigator} 
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="ProductListing" component={ProductListingScreen} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />

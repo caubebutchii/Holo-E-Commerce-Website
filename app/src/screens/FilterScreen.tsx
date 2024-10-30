@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const FilterScreen = () => {
+const FilterScreen = ({navigation}:any) => {
   const [shippingOptions, setShippingOptions] = useState({
     instant: false,
     express: false,
@@ -19,7 +19,7 @@ const FilterScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Filter</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>navigation.goBack()}>
           <Ionicons name="close" size={24} color="#000" />
         </TouchableOpacity>
       </View>

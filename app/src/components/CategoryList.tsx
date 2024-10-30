@@ -1,41 +1,74 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet, Image, View } from 'react-native';
+import { ScrollView, TouchableOpacity, Text, StyleSheet, Image, View, FlatList } from 'react-native';
 
-const CategoryList = ({ categories, onCategoryPress }: any) => {
-  return (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false} 
-      contentContainerStyle={styles.container}
-    >
-      {categories.map((category: any) => (
-        <TouchableOpacity
-          key={category.id}
-          style={styles.categoryButton}
-          onPress={() => onCategoryPress(category)}
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: category.img }}
-              style={styles.categoryImage}
-            />
-          </View>
-          <Text style={styles.categoryText}>{category.name}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+const CategoryList = ({ categories, onCategoryPress, scroll }: any) => {
+  // Giới hạn số lượng phần tử hiển thị
+  // const limitedCategories = categories.slice(0, 8); // Lấy 8 phần tử đầu tiên nếu cần
+
+  if (scroll) {
+    return (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.container}>
+        {categories.map((category:any) => (
+          <TouchableOpacity
+            key={category.id}
+            style={styles.categoryButtonScroll}
+            onPress={() => onCategoryPress(category)}
+          >
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: category.img }}
+                style={styles.categoryImage}
+              />
+            </View>
+            <Text style={styles.categoryText}>{category.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
+  } else {
+    return (
+      <FlatList
+        data={categories}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.categoryButton}
+            onPress={() => onCategoryPress(item)}
+          >
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: item.img }}
+                style={styles.categoryImage}
+              />
+            </View>
+            <Text style={styles.categoryText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item.id}
+        numColumns={4} 
+        showsVerticalScrollIndicator={false}
+        style={{ marginLeft: 12 }}
+      />
+    );
+  }
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    // paddingVertical: 16,
+    marginTop:10,
+    marginBottom:-10,
+    paddingHorizontal: 16,
   },
   categoryButton: {
     alignItems: 'center',
-    marginHorizontal: 8,
-    width: 70, // Fixed width for consistent layout
+    margin: 4,
+    flex: 1, 
+  },
+  categoryButtonScroll:{
+    alignItems: 'center',
+    marginRight:25,
+    flex: 1, 
   },
   imageContainer: {
     width: 60,
@@ -45,7 +78,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    overflow: 'hidden', // Ensure the image doesn't overflow the circular container
+    overflow: 'hidden',
   },
   categoryImage: {
     width: '100%',
@@ -56,7 +89,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     textAlign: 'center',
-    maxWidth: 70, // Ensure text doesn't overflow the button width
+    maxWidth: 70,
   },
 });
 

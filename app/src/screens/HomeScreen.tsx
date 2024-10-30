@@ -8,17 +8,19 @@ import ProductGrid from '../components/ProductGrid';
 import FeaturedBanner from '../components/FeaturedBanner';
 import DiscountedBanner from '../components/DiscountedBanner';
 
-import { db } from '../firebaseConfig/firebaseConfig';
-import { collection, getDocs } from "firebase/firestore";
+import { db } from '../firebase/firebaseConfig';
+import { collection, getDocs, query, updateDoc, where,doc } from "firebase/firestore";
+import AddProduct from '../firebase/addData';
+import AddProducts from '../firebase/addData';
 
 const HomeScreen = ({ navigation }: any) => {
-  const [categories, setCategories] = useState<{ id: string; [key: string]: any }[]>([]);
-
+  const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
+  const [products, setProducts] = useState<{ id: string;[key: string]: any }[]>([]);
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataCate = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'categories'));
-        const fetchedItems: { id: string; [key: string]: any }[] = [];
+        const fetchedItems: { id: string;[key: string]: any }[] = [];
         querySnapshot.forEach((doc) => {
           fetchedItems.push({ id: doc.id, ...doc.data() });
         });
@@ -27,8 +29,47 @@ const HomeScreen = ({ navigation }: any) => {
         console.error('Error getting documents: ', error);
       }
     };
-
-    fetchData();
+    const fetchDataItems = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'items'));
+        const fetchedItems: { id: string;[key: string]: any }[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedItems.push({ id: doc.id, ...doc.data() });
+        });
+        setProducts(fetchedItems);
+      } catch (error) {
+        console.error('Error getting documents: ', error);
+      }
+    };
+    // const addTagsToFashionItems = async () => {
+    //   try {
+    //     // Bước 1: Truy vấn các items có category bao gồm 'thời trang nam'
+    //     const itemsRef = collection(db, 'items');
+    //     const q = query(itemsRef, where('name', '==', 'Quần jean nam chữ thập thêu ống suông rộng xanh đen, Quần chun kaki túi hộp chất vải dày dặn cao cấp style hàn quốc 2022'));
+    //     const querySnapshot = await getDocs(q);
+    
+    //     // Bước 2: Cập nhật từng item để thêm mảng tags
+    //     const tags = ["Quần jean", "Nam", "Ống suông", "Xanh đen", "Kaki", "Chất vải dày", "Phong cách Hàn Quốc"]; // Mảng tags bạn muốn thêm
+    
+    //     const updatePromises = querySnapshot.docs.map(async (doc) => {
+    //       const itemRef = doc(db, 'items', doc.id);
+    //       await updateDoc(itemRef, {
+    //         tags: tags // Thêm mảng tags vào item
+    //       });
+    //     });
+    
+    //     // Chờ tất cả các cập nhật hoàn thành
+    //     await Promise.all(updatePromises);
+    //     console.log('Tags added to all fashion items successfully!');
+    //   } catch (error) {
+    //     console.error('Error adding tags: ', error);
+    //   }
+    // };
+    
+    // // Gọi hàm
+    // addTagsToFashionItems();
+    fetchDataCate();
+    fetchDataItems();
   }, []);
 
   const featuredProductShoe = {
@@ -49,28 +90,10 @@ const HomeScreen = ({ navigation }: any) => {
     discount: '45%',
     image: 'https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fphone%2FiphoneX.jpg?alt=media&token=6477f96a-676b-4efa-af7e-7b87d1d969b1',
   };
-  const recommendedProducts = [
-    { id: 1, name: 'Shoes', price: 299, rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-lilartsy-1159670.jpg?alt=media&token=0e26c824-26d5-4a94-8d85-478d0048fbe0' },
-    { id: 2, name: 'Tablet', price: 499, rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/table%2Fpexels-ravindar-negi-2150635-3785868.jpg?alt=media&token=618f2e66-8880-499a-b280-73fa430087b7' },
-    { id: 3, name: 'Set đồ nam cá nhà bà tính', price: 499, category: 'thời trang nam', colors: [{ color: 'red' }, { color: 'blue' }], rating: 4.5, image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/Fashion%2Fset%2Fpexels-pixabay-157675.jpg?alt=media&token=35e1bcdd-d528-4843-92e0-23c968f02a5b' },
-    {
-      id: "1",
-      name: "Áo thun nam cổ tròn",
-      price: 299000,
-      image: "https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/Fashion%2Fset%2Fpexels-pixabay-157675.jpg?alt=media&token=35e1bcdd-d528-4843-92e0-23c968f02a5b",
-      description: "Áo thun namm cổ tròn chất liệu cotton 100%, thoáng mát, thấm hút mồ hôi tốt. Thiết kế đơn giản, dễ phối đồ, phù hợp cho nhiều dịp khác nhau.",
-      category: "thời trang nam",
-      rating: 4.5,
-      colors: ["Trắng", "Đen", "Xanh navy"],
-      colorImages: {
-        "Trắng": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fphone%2FiphoneX.jpg?alt=media&token=6477f96a-676b-4efa-af7e-7b87d1d969b1",
-        "Đen": "https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-desertedinurban-4462781.jpg?alt=media&token=1de69849-7e62-40ab-8060-43b30c436592",
-        "Xanh navy": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/bg%2Fpexels-n-voitkevich-6214479.jpg?alt=media&token=649d49a2-6197-4d41-bd11-a07631402bd6"
-      }
-    }
-  ];
+
 
   const handleCategoryPress = (category: any) => {
+    
     navigation.navigate('ProductListing', { category, categories });
   };
 
@@ -81,12 +104,11 @@ const HomeScreen = ({ navigation }: any) => {
   const handleSearch = (text: string) => {
     // Handle search functionality
   };
-
   const handleFilter = () => {
     navigation.navigate('filter');
   };
 
-  // Render item function for FlatList
+  // Render item function for FlatLists
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
       case 'header':
@@ -100,25 +122,38 @@ const HomeScreen = ({ navigation }: any) => {
       case 'discountedBanner':
         return (
           <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Special Offers</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Special Offers</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.featuredContainer}>
+              <DiscountedBanner item={featuredProductFashion} onPress={() => handleProductPress(featuredProductFashion)} />
+              <DiscountedBanner item={featuredProductElectronic} onPress={() => handleProductPress(featuredProductElectronic)} />
+            </View>
           </View>
-          <View style={styles.featuredContainer}>
-            <DiscountedBanner item={featuredProductFashion} onPress={() => handleProductPress(featuredProductFashion)} />
-            <DiscountedBanner item={featuredProductElectronic} onPress={() => handleProductPress(featuredProductElectronic)} />
-          </View>
-        </View>
         );
       case 'productGrid':
         return (
-          <ProductGrid
-            title="Popular Products"
-            products={recommendedProducts}
-            onProductPress={handleProductPress}
-          />
+          <View style={styles.section}>
+            <View style={{ ...styles.ProductHeader, }}>
+              <Text style={styles.sectionTitle}>Popular Products</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  handleCategoryPress(null)
+                }}>
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ marginRight: -10 }}>
+              <ProductGrid
+                products={products}
+                onProductPress={handleProductPress}
+              />
+            </View>
+          </View>
+
         );
       default:
         return null;
@@ -134,14 +169,22 @@ const HomeScreen = ({ navigation }: any) => {
     { type: 'discountedBanner' },
     { type: 'productGrid' },
   ];
-
   return (
+
     <LinearGradient colors={['#E6F3FF', '#FFFFFF']} style={styles.container}>
+      {/* <AddProducts productsData={products} /> */}
       <FlatList
         data={data}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        // renderItem={({ item }) => (
+        //   <renderItem
+        //     key={item.id}  // Sử dụng id làm key
+        //     item={item}
+        //   />
+        // )}
+        // keyExtractor={(item, index) => idndex.tosssString()}
         showsVerticalScrollIndicator={false}
+        keyExtractor={item => item.id ? item.id.toString() : item.name}
       />
     </LinearGradient>
   );
@@ -152,7 +195,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   section: {
-    marginVertical: 24,
+    marginVertical: 10,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -160,6 +203,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     marginBottom: 12,
+  },
+  ProductHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+
   },
   sectionTitle: {
     fontSize: 18,

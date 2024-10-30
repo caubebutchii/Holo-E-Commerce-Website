@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-const Header = ({ title, onBackPress, showCart,navigation }: any) => {
+const Header = ({ title, onBackPress, showCart }: any) => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {onBackPress && (
@@ -12,7 +14,9 @@ const Header = ({ title, onBackPress, showCart,navigation }: any) => {
       )}
       <Text style={styles.title}>{title}</Text>
       {showCart && (
-        <TouchableOpacity style={styles.cartButton}>
+        <TouchableOpacity style={styles.cartButton}
+          onPress={()=>navigation.navigate('Checkout')}
+        >
           <Ionicons name="cart-outline" size={24} color="#007AFF" />
         </TouchableOpacity>
       )}
