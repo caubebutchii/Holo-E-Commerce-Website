@@ -7,14 +7,19 @@ const ProductItem = ({ product, onPress }: any) => {
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <Image source={{ uri: product.image }} style={styles.image} resizeMode='cover' />
       <View style={styles.infoContainer}>
-        <Text style={styles.name}>{product.name}</Text>
+        <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         <View style={styles.ratingContainer}>
           <Ionicons name="star" size={10} color="#FFD700" />
           <Text style={styles.rating}>{product.rating}</Text>
         </View>
         <View style={styles.priceRatingContainer}>
-          <Text style={styles.price}>${product.price}</Text>
-          <Text style ={styles.textPrice}>Đã bán 5,4k</Text>
+          <View style = {styles.priceContainer}>
+            <Text style={styles.d}>₫</Text>
+            <Text style={styles.price}>
+              {new Intl.NumberFormat('vi-VN').format(product.price)}
+            </Text>
+          </View>
+          <Text style={styles.textPrice}>Đã bán 5,4k</Text>
           {/* <TouchableOpacity style={styles.addButton}>
             <Ionicons name="add-circle-outline" size={30} color="#007AFF" />
           </TouchableOpacity> */}
@@ -35,8 +40,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
     width: '50%',
-    flex:1,
-    marginRight:10
+    flex: 1,
+    marginRight: 10
   },
   image: {
     width: '100%',
@@ -52,24 +57,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   name: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
     marginVertical: 10
   },
+  priceContainer:{
+    flexDirection:'row'
+  },
   price: {
-    fontSize: 20,
+    fontSize: 16,
     color: '#ed154b',
     marginTop: 4,
     fontWeight: 'bold'
   },
-  textPrice:{
-    marginTop:10,
-    marginRight:10,
-    fontSize:14
+  d:{
+    fontSize: 10,
+    color: '#ed154b',
+    marginTop: 4,
+    fontWeight: 'bold',
+    textAlign:'justify'
+  },
+  textPrice: {
+    marginTop: 10,
+    marginRight: 10,
+    fontSize: 10
   },
   ratingContainer: {
     height: 20,
-    width:40,
+    width: 40,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,

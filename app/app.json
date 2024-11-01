@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AppHOLO-E-COMMERCE-WEBSITE",
-    "slug": "AppHOLO-E-COMMERCE-WEBSITE",
+    "name": "app",
+    "slug": "app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,12 +12,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "platforms": ["ios", "android"],
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "permissions": ["INTERNET"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

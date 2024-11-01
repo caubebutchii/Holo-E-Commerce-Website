@@ -9,23 +9,25 @@ type typeCategories = {
   name: string,
   icon: string
 }
-const ProductListingScreen = ({ navigation, category }: any) => {
+const ProductListingScreen = ({ navigation, route }: any) => {
+  const { category, categories } = route.params;
+  console.log('Categories received:', categories); // Kiểm tra dữ liệu nhận được
   const [selectedCategory, setSelectedCategory] = useState<typeCategories>(category);
   console.log(selectedCategory);
 
-  const categories = [
-    { id: 1, name: 'Điện tử', icon: 'phone-portrait-outline' },
-    { id: 2, name: 'Thời trang', icon: 'shirt-outline' },
-    { id: 3, name: 'Làm đẹp', icon: 'color-palette-outline' },
-    { id: 4, name: 'Trái cây tươi', icon: 'nutrition-outline' },
-  ];
+  // const categories = [
+  //   { id: 1, name: 'Điện tử', icon: 'phone-portrait-outline' },
+  //   { id: 2, name: 'Thời trang', icon: 'shirt-outline' },
+  //   { id: 3, name: 'Làm đẹp', icon: 'color-palette-outline' },
+  //   { id: 4, name: 'Trái cây tươi', icon: 'nutrition-outline' },
+  // ];
 
   const products = [
     {
       id: 1,
-      name: 'Điện thoại thông minh X',
+      name: 'Điện thoại thông minh iphone X',
       price: 999,
-      image: 'https://example.com/smartphone-x.jpg',
+      image: 'https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fphone%2FiphoneX.jpg?alt=media&token=6477f96a-676b-4efa-af7e-7b87d1d969b1',
       rating: 4.5,
       category: 'Điện tử'
     },
@@ -108,8 +110,10 @@ const ProductListingScreen = ({ navigation, category }: any) => {
     <View style={styles.container}>
       <Header onBackPress={handleBackPress} title={selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"} showCart />
       <SearchBar placeholder="Tìm kiếm sản phẩm" />
-      <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
-      <ProductGrid products={prodcuts} onProductPress={handleProductPress} />
+      <View style = {{marginBottom:1}}>
+        <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
+      </View>
+      <ProductGrid products={products} onProductPress={handleProductPress} />
     </View>
   );
 };
