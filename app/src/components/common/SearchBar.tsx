@@ -1,57 +1,64 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const SearchBar = ({ placeholder, onChangeText, onPressSearch,onPressFilter }: any) => {
+const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: any) => {
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          onChangeText={onChangeText}
-          placeholderTextColor="#999"
-        />
-        <TouchableOpacity onPress={onPressSearch}>
-          <Ionicons name="search" size={20} color="#007AFF" style={styles.icon} />
+    <LinearGradient
+      colors={['#8B4513', '#D2691E']}
+      style={styles.gradient}
+    >
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#999" />
+          <TextInput
+            style={styles.input}
+            placeholder={placeholder}
+            onChangeText={onChangeText}
+            placeholderTextColor="#999"
+          />
+        </View>
+        <TouchableOpacity onPress={onPressFilter} style={styles.filterButton}>
+          <Ionicons name="options-outline" size={20} color="#999" />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={onPressFilter} style={styles.filterButton}>
-        <Ionicons name="filter" size={24} color="#007AFF" />
-      </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  gradient: {
+    paddingBottom: 20,
+    borderBottomLeftRadius:20,
+    borderBottomRightRadius:20
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: 12,
+   
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 8,
     paddingHorizontal: 12,
-  },
-  icon: {
-    marginRight: 8,
+    paddingVertical: 8,
+    gap: 8,
   },
   input: {
     flex: 1,
-    paddingVertical: 8,
     fontSize: 16,
     color: '#333',
   },
   filterButton: {
-    marginLeft: 12,
     padding: 8,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 8,
   },
 });
 

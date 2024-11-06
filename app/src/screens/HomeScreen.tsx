@@ -40,7 +40,7 @@ const tui = [
     "category": "túi nữ",
     "rating": 4.8,
     "colors": ["Denim", "Trà Sữa", "Đen"],
-     "tags": ["LESAC", "thanh lịch", "chất liệu cao cấp", "nhiều dịp", "bền đẹp"],
+    "tags": ["LESAC", "thanh lịch", "chất liệu cao cấp", "nhiều dịp", "bền đẹp"],
     "colorImages": {
       "Denim": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2FLESAC%20Bloom%20Bag%2Fdenim.webp?alt=media&token=f173c70e-b168-4e52-911b-4984b408a28e",
       "Trà Sữa": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2FLESAC%20Bloom%20Bag%2Ftr%C3%A0%20s%E1%BB%AFa.webp?alt=media&token=ae667817-1ff1-416d-bd4f-def6bb5d845e",
@@ -98,10 +98,10 @@ const tui = [
       "Trắng, ngọc + xích": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2FHandmade%2Ftr%E1%BA%AFng%2C%20ng%E1%BB%8Dc%2Bx%C3%ADch.webp?alt=media&token=6e86a48f-6fe2-4f09-8388-d7d2e8a77c7f"
     }
   },
-  
-  
-  
-  
+
+
+
+
 ]
 const tuine = {
   "id": "026",
@@ -218,7 +218,7 @@ const dongho = [
     },
     "tags": ["đồng hồ thông minh", "BeFit", "44mm", "hiện đại", "tinh tế", "bền đẹp", "dành cho mọi đối tượng"]
   }
-  
+
 ]
 const HomeScreen = ({ navigation }: any) => {
   const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
@@ -249,7 +249,7 @@ const HomeScreen = ({ navigation }: any) => {
         console.error('Error getting documents: ', error);
       }
     };
-    
+
     fetchDataCate();
     fetchDataItems();
 
@@ -262,25 +262,67 @@ const HomeScreen = ({ navigation }: any) => {
   const featuredProductShoe = {
     id: 1,
     name: 'Shoes',
-    discount: '50% off',
+    "price": 790000,
+    "category": "thời trang nam",
+    "rating": 4.5,
+    "discount": '50% off',
     image: 'https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-desertedinurban-4462781.jpg?alt=media&token=1de69849-7e62-40ab-8060-43b30c436592',
   };
+  const featuredProducts = [
+    {
+      "id": "1",
+      "name": "Shoes",
+      "price": 790000,
+      "category": "thời trang nam",
+      "rating": 4.5,
+      "discount": "50% off",
+      "image": "https://firebasestorage.googleapis.com/v0/b/commerce-9e46f.appspot.com/o/shoes%2Fpexels-desertedinurban-4462781.jpg?alt=media&token=1de69849-7e62-40ab-8060-43b30c436592",
+    },
+    {
+      "id": "031",
+      "name": "Watch",
+      "price": 227000,
+      "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2Fpexels-bemistermister-380782.jpg?alt=media&token=3714995a-6504-4aa4-a780-0b40586816a0",
+      "description": "Đồng hồ nam dây da PABLO RAEZ với tính năng dạ quang, chống nước, thiết kế lịch sự, đơn giản và hiện đại, phù hợp cho nhiều dịp khác nhau.",
+      "category": "đồng hồ",
+      "rating": 4.6,
+      "discount": "35% off",
+      "colors": ["Dây da nâu mặt trắng", "Dây da đen mặt trắng", "Dây da đen mặt đen", "Dây thép mặt trắng", "Dây thép mặt đen"],
+      "colorImages": {
+        "Dây da nâu mặt trắng": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2FPABLO%20RAEZ%2Fd%C3%A2y%20da%20n%C3%A2u%20m%E1%BA%B7t%20tr%E1%BA%AFng.webp?alt=media&token=137ab3cd-b76c-4bc7-b796-6c63ff74203e",
+        "Dây da đen mặt trắng": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2FPABLO%20RAEZ%2Fd%C3%A2y%20da%20%C4%91en%20m%E1%BA%B7t%20tr%E1%BA%AFng.webp?alt=media&token=25779a77-e44f-4562-b92c-c2016441ac61",
+        "Dây da đen mặt đen": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2FPABLO%20RAEZ%2Fd%C3%A2y%20da%20%C4%91en%20m%E1%BA%B7t%20%C4%91en.webp?alt=media&token=6a981e62-7cef-4924-bc91-3e285c8313ae",
+        "Dây thép mặt trắng": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2FPABLO%20RAEZ%2Fd%C3%A2y%20th%C3%A9p%20m%E1%BA%B7t%20tr%E1%BA%AFng.webp?alt=media&token=49538d6d-635f-4ce2-abc1-e9823f6add69",
+        "Dây thép mặt đen": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fclock%2FPABLO%20RAEZ%2Fd%C3%A2y%20th%C3%A9p%20m%E1%BA%B7t%20%C4%91en.webp?alt=media&token=4618200b-5555-433b-9486-8761f5056365"
+      },
+      "tags": ["đồng hồ", "PABLO RAEZ", "dạ quang", "chống nước", "lịch sự", "đơn giản", "hiện đại", "dành cho nam"]
+    },
+    {
+      "id": "3",
+      "name": "Dior bag",
+      "price": 790000,
+      "category": "túi nữ",
+      "rating": 4.5,
+      "discount": "90% off",
+      "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2Fpexels-ejov-igor-1726422-11980639.jpg?alt=media&token=334a3fc9-aab0-4803-8c5d-c10155faa692",
+    },
+  ]
   const featuredProductFashion = {
     id: 2,
-    name: 'túi sách nữ thời trang',
-    discount: '30%',
-    image: 'https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2Fwomen%20bag.jpg?alt=media&token=cc01787c-95a4-436a-892d-9cedd468ebcb',
+    name: "túi sách nữ thời trang",
+    discount: "30%",
+    image: "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fbag%2Fwomen%20bag.jpg?alt=media&token=cc01787c-95a4-436a-892d-9cedd468ebcb",
   };
   const featuredProductElectronic = {
     id: 3,
-    name: 'Iphone X',
-    discount: '45%',
-    image: 'https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fphone%2FiphoneX.jpg?alt=media&token=6477f96a-676b-4efa-af7e-7b87d1d969b1',
+    name: "Iphone X",
+    discount: "45%",
+    image: "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/items%2Fphone%2FiphoneX.jpg?alt=media&token=6477f96a-676b-4efa-af7e-7b87d1d969b1",
   };
 
 
   const handleCategoryPress = (category: any) => {
-    
+
     navigation.navigate('ProductListing', { category, categories });
   };
 
@@ -297,35 +339,38 @@ const HomeScreen = ({ navigation }: any) => {
   const handleSearch = (text: string) => {
     setSearchQuery(text)
   };
-  const handlePressSearch = ()=>{
-    navigation.navigate('ProductListing', {searchQuery, category:null, categories });
+  const handlePressSearch = () => {
+    navigation.navigate('ProductListing', { searchQuery, category: null, categories });
   }
   const handleFilter = () => {
     navigation.navigate('filter');
   };
 
-  // Render item function for FlatLists
+  // Render item function for FlatListss
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
       case 'header':
         return <Header title="All Deals" showCart />;
-        
+
       case 'search':
-        return <SearchBar placeholder="Search for product" onPressSearch={handlePressSearch} 
-        onChangeText={handleSearch} onPressFilter={handleFilter} 
+        return <SearchBar placeholder="Search for product" onPressSearch={handlePressSearch}
+          onChangeText={handleSearch} onPressFilter={handleFilter}
         />;
-      case 'categoryList':
-        return <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />;
       case 'featuredBanner':
-        return <FeaturedBanner product={featuredProductShoe} onPress={() => handleProductPress(featuredProductShoe)} />;
+        return <FeaturedBanner products={featuredProducts} onPressProduct={() => handleProductPress} />;
+      case 'categoryList':
+        return(
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Shop by categories</Text>
+          </View>
+          <CategoryList categories={categories} onCategoryPress={handleCategoryPress} />
+        </View>);
       case 'discountedBanner':
         return (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Special Offers</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>See All</Text>
-              </TouchableOpacity>
             </View>
             <View style={styles.featuredContainer}>
               <DiscountedBanner item={featuredProductFashion} onPress={() => handleProductPress(featuredProductFashion)} />
@@ -363,16 +408,11 @@ const HomeScreen = ({ navigation }: any) => {
   const data = [
     { type: 'header' },
     { type: 'search' },
-    { type: 'categoryList' },
     { type: 'featuredBanner' },
+    { type: 'categoryList' },
     { type: 'discountedBanner' },
     { type: 'productGrid' },
   ];
-  const handleAddProduct=({datas})=>{
-      datas.forEach((data)=>{
-        <AddProducts productsData={data}/>
-      })
-  }
   return (
 
     <LinearGradient colors={['#E6F3FF', '#FFFFFF']} style={styles.container}>
