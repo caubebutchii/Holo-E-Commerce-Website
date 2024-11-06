@@ -138,7 +138,7 @@ const ProductListingScreen = ({ navigation, route }: any) => {
   ];
 
   return (
-    <LinearGradient colors={['#E6F3FF', '#FFFFFF']} style={styles.container}>
+    <LinearGradient colors={['#ffffff', '#ffffff']} style={styles.container}>
       <FlatList
         data={data}
         renderItem={renderItem}

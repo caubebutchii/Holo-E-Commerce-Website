@@ -195,7 +195,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Header onBackPress={handleBackPress} showCart />
+        <Header onBackPress={handleBackPress} showCart transparent />
       </View>
 
       <FlatList

@@ -4,11 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const Header = ({ title, onBackPress, showCart }: any) => {
+const Header = ({ title, onBackPress, showCart,transparent }: any) => {
   const navigation = useNavigation();
   return (
     <LinearGradient
-    colors={['#8B4513', '#8B4513']}
+    colors={transparent ? ['rgba(249, 248, 247, 0.001)', 'rgba(249, 248, 247, 0.001)'] : ['#30C084', '#66FFCC']}
     style={styles.gradient}
   >
     <View style={styles.container}>
@@ -22,7 +22,7 @@ const Header = ({ title, onBackPress, showCart }: any) => {
         <TouchableOpacity style={styles.cartButton}
           onPress={()=>navigation.navigate('Checkout')}
         >
-          <Ionicons name="cart-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="cart-outline" size={24} color={transparent?"#1e1eed":"#FFFFFF"} />
         </TouchableOpacity>
       )}
     </View>

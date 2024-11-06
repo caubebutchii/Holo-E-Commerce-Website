@@ -403,7 +403,7 @@ const HomeScreen = ({ navigation }: any) => {
   ];
   return (
 
-    <LinearGradient colors={['#E6F3FF', '#FFFFFF']} style={styles.container}>
+    <LinearGradient colors={['#ffffff', '#ffffff']} style={styles.container}>
       {/* <TouchableOpacity onPress={()=>  <AddProducts productsData={dongho}/> } style = {{backgroundColor:'white', height:100}}/> */}
       {/* <AddProducts productsData={dongho}/> */}
       <FlatList
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#000',
   },
   seeAllText: {
     fontSize: 14,
