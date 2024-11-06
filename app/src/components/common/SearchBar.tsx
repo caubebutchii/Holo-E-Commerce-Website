@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: any) => {
   return (
     <LinearGradient
-      colors={['#8B4513', '#D2691E']}
+      colors={['#66FFCC', '#99FFEE']}
       style={styles.gradient}
     >
       <View style={styles.container}>
@@ -29,7 +29,7 @@ const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: 
 
 const styles = StyleSheet.create({
   gradient: {
-    paddingBottom: 20,
+    paddingBottom: 26,
     borderBottomLeftRadius:20,
     borderBottomRightRadius:20
   },

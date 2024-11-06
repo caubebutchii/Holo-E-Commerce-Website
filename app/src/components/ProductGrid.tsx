@@ -25,7 +25,8 @@ const ProductGrid = ({ title, products, onProductPress }: any) => {
 const styles = StyleSheet.create({
   container: {
     paddingLeft:10,
-    marginTop:-20
+    marginTop:-20,
+    paddingRight:10,
   },
   title: {
     fontWeight: 'bold',

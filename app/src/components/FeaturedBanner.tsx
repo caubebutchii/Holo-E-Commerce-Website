@@ -44,12 +44,15 @@ const styles = StyleSheet.create({
   carouselContainer: {
     height: 200,
     paddingHorizontal: 16,
+    overflow: 'hidden',
     borderRadius: 12,
-    marginTop:12
+    marginTop:10
 
   },
   container: {
     flex: 1,
+    overflow: 'hidden',
+    borderRadius: 12,
   },
   banner: {
     height: 200,
@@ -75,7 +78,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#30C084',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
