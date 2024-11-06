@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 // Cấu hình Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBrLzdXDU03rwIWBu7hb232ClRzlXLG5qU",
@@ -19,5 +20,8 @@ const app = initializeApp(firebaseConfig);
 // Khởi tạo Firestore
 const db = getFirestore(app);
 
+// Khởi tạo Authentication
+const auth = getAuth(app);
+
 console.log('Firebase initialized successfully without firestore')
-export { app,db};
+export { app,db, auth};

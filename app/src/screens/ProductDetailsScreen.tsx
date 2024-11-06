@@ -5,6 +5,8 @@ import Header from '../components/common/Header';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import ProductGrid from '../components/ProductGrid';
+import { app } from '../firebase/firebaseConfig';
+import { getAuth, signOut } from 'firebase/auth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -160,11 +162,31 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     </>
   );
   const handleAddToCart = () => {
+    const auth = getAuth(app);
+  if (!auth.currentUser) {
+    navigation.navigate('Welcome', {
+      returnTo: {
+        screen: 'ProductDetails',
+        params: { product, action: 'addToCart' }
+      }
+    });
+    return;
+  }
     setSelectedAddOrBuy('Add to Card')
     setModalVisible(true);
   };
 
   const handleBuyNow = () => {
+    const auth = getAuth(app);
+  if (!auth.currentUser) {
+    navigation.navigate('Welcome', {
+      returnTo: {
+        screen: 'ProductDetails',
+        params: { product, action: 'buyNow' }
+      }
+    });
+    return;
+  }
     setSelectedAddOrBuy('Buy Now')
     setModalVisible(true);
   };
