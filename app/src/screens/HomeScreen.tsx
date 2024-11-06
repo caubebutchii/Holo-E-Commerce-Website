@@ -7,8 +7,9 @@ import CategoryList from '../components/CategoryList';
 import ProductGrid from '../components/ProductGrid';
 import FeaturedBanner from '../components/FeaturedBanner';
 import DiscountedBanner from '../components/DiscountedBanner';
-
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../firebase/firebaseConfig';
+import { app } from '../firebase/firebaseConfig';
 import { collection, getDocs, query, updateDoc, where,doc } from "firebase/firestore";
 import AddProduct from '../firebase/addData';
 import AddProducts from '../firebase/addData';
@@ -249,8 +250,13 @@ const HomeScreen = ({ navigation }: any) => {
       }
     };
     
-      fetchDataCate();
+    fetchDataCate();
     fetchDataItems();
+
+    return () => {
+      setCategories([]);
+      setProducts([]);
+    }; // Clean up function to reset state
   }, []);
 
   const featuredProductShoe = {
@@ -279,7 +285,13 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   const handleProductPress = (product: any) => {
-    navigation.navigate('ProductDetails', { product });
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    if (user) {
+      navigation.navigate('ProductDetails', { product });
+    } else {
+      navigation.navigate('Welcome', { returnTo: { screen: 'ProductDetails', params: { product } } });
+    }
   };
 
   const handleSearch = (text: string) => {

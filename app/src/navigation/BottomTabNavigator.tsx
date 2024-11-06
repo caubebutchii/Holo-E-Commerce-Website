@@ -5,8 +5,22 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import CartScreen from '../screens/CheckOutScreen';
 import ProductListingScreen from '../screens/ProductListingScreen';
+import AccountScreen from '../screens/AccountScreen';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { db } from '../firebase/firebaseConfig';
+import { app } from '../firebase/firebaseConfig';
 
 const Tab = createBottomTabNavigator();
+
+const handleTabPress = (route, isFocused, navigation) => {
+  const auth = getAuth(app);
+  const user = auth.currentUser;
+  if (route.name === 'Account' && !user) {
+    navigation.navigate('Welcome', { returnTo: { screen: 'Account' } });
+  } else if (!isFocused) {
+    navigation.navigate(route.name);
+  }
+};
 
 function MyTabBar({ state, descriptors, navigation }:any) {
   return (
@@ -29,8 +43,8 @@ function MyTabBar({ state, descriptors, navigation }:any) {
             canPreventDefault: true,
           });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+          if (!event.defaultPrevented) {
+            handleTabPress(route, isFocused, navigation);
           }
         };
 
@@ -77,12 +91,10 @@ const BottomTabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="List" component={ProductListingScreen} 
-      initialParams={{ category: null }} // Truyền tham số mặc định là null
+      initialParams={{ category: null }}
       />
       <Tab.Screen name="Wishlist" component={CartScreen} />
-      {/* <Tab.Screen name="ProductListing" component={ProductListingScreen} /> */}
-      {/* <Tab.Screen name="Messages" component={HomeScreen} /> */}
-      <Tab.Screen name="Account" component={HomeScreen} />
+      <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
 };
