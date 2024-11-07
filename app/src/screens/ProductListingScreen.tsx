@@ -7,6 +7,7 @@ import CategoryList from '../components/CategoryList';
 import ProductGrid from '../components/ProductGrid';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
+import SkeletonLoader from '../components/common/SkeletonLoader';
 
 type typeCategories = {
   id: string;
@@ -15,24 +16,29 @@ type typeCategories = {
 };
 
 const ProductListingScreen = ({ navigation, route }: any) => {
-  const { category,searchQuery } = route.params;
+  const { category, searchQuery } = route.params;
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<typeCategories | null>(category || null);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [currentSearchQuery, setCurrentSearchQuery] = useState(searchQuery || '');
   const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDataCate = async () => {
+      setLoading(true);
       try {
         const querySnapshot = await getDocs(collection(db, 'categories'));
-        const fetchedItems: { id: string; [key: string]: any }[] = [];
+        const fetchedItems: { id: string;[key: string]: any }[] = [];
         querySnapshot.forEach((doc) => {
           fetchedItems.push({ id: doc.id, ...doc.data() });
         });
         setCategoryList(fetchedItems);
       } catch (error) {
         console.error('Error getting documents: ', error);
+      }
+      finally {
+        setLoading(false);
       }
     };
 
@@ -84,10 +90,10 @@ const ProductListingScreen = ({ navigation, route }: any) => {
     const filtered = productsToFilter.filter(product => {
       // Search in name
       const nameMatch = product.name.toLowerCase().includes(searchText.toLowerCase());
-      
+
       // Search in tags if they exist
-      const tagMatch = product.tags ? 
-        product.tags.some((tag: string) => 
+      const tagMatch = product.tags ?
+        product.tags.some((tag: string) =>
           tag.toLowerCase().includes(searchText.toLowerCase())
         ) : false;
 
@@ -99,7 +105,7 @@ const ProductListingScreen = ({ navigation, route }: any) => {
   const handleSearch = (text: string) => {
     setCurrentSearchQuery(text);
   };
-  const handlePressSearch = ()=>{
+  const handlePressSearch = () => {
     filterProducts(products, currentSearchQuery);
   }
   const handleFilter = () => {
@@ -110,19 +116,19 @@ const ProductListingScreen = ({ navigation, route }: any) => {
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
       case 'header':
-        return <Header 
-        onBackPress={handleBackPress} 
-        title={currentSearchQuery ? 
-          `Kết quả tìm kiếm: ${filteredProducts.length}` : 
-          selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"
-        }  showCart />;
+        return <Header
+          onBackPress={handleBackPress}
+          title={currentSearchQuery ?
+            `Kết quả tìm kiếm: ${filteredProducts.length}` :
+            selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"
+          } showCart />;
       case 'search':
         return <SearchBar placeholder="Tìm kiếm sản phẩm" onChangeText={handleSearch} onPressSearch={handlePressSearch} onPressFilter={handleFilter} />;
       case 'categoryList':
         return <CategoryList categories={categoryList} onCategoryPress={handleCategoryPress} scroll />;
       case 'productGrid':
         return (
-            <ProductGrid products={filteredProducts} onProductPress={handleProductPress} />
+          <ProductGrid products={filteredProducts} onProductPress={handleProductPress} />
         );
       default:
         return null;
@@ -138,14 +144,20 @@ const ProductListingScreen = ({ navigation, route }: any) => {
   ];
 
   return (
-    <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={(item, index) => index.toString()} // Sử dụng index làm key
-      />
-    </LinearGradient>
+    <View style = {styles.container}>
+      {loading ? (
+        <SkeletonLoader />
+      ) :(
+          <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
+            <FlatList
+              data={data}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()} // Sử dụng index làm key
+            />
+          </LinearGradient>
+        )}
+    </View>
   );
 };
 
