@@ -13,6 +13,7 @@ import { app } from '../firebase/firebaseConfig';
 import { collection, getDocs, query, updateDoc, where,doc } from "firebase/firestore";
 import AddProduct from '../firebase/addData';
 import AddProducts from '../firebase/addData';
+import SplashAd from '../components/SplashAd';
 const tui = [
   {
     "id": "021",
@@ -220,10 +221,140 @@ const dongho = [
   }
 
 ]
+const lamdep = [
+  {
+    "id": "041",
+    "name": "Sữa dưỡng thể da sáng tức thì Vaseline 350ml/chai",
+    "price": 114000,
+    "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2Fvn-11134207-7r98o-ltwb8bc2ekgacb.webp?alt=media&token=48e3eedf-5c91-4f99-8dee-c4ae074c5135",
+    "description": "Sữa dưỡng thể Vaseline giúp làm sáng da tức thì, giữ da mềm mịn và cung cấp độ ẩm lâu dài.",
+    "category": "làm đẹp",
+    "rating": 4.7,
+    "colors": ["Dịu mát sáng da", "Ngăn ngừa lão hóa", "Sáng da tức thì"],
+    "colorImages": {
+      "Dịu mát sáng da": {
+        "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2Fd%E1%BB%8Bu%20m%C3%A1t%20s%C3%A1ng%20da.webp?alt=media&token=256d2351-80f7-41a9-b675-ca9ca295cd6a",
+        "available_quantity": 50
+      },
+      "Ngăn ngừa lão hóa": {
+        "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2Fng%C4%83n%20ng%E1%BB%ABa%20l%C3%A3o%20h%C3%B3a.webp?alt=media&token=c004ecd3-3237-423d-a9b2-b5d2d3a5c358",
+        "available_quantity": 30
+      },
+      "Sáng da tức thì": {
+        "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2Fs%C3%A1ng%20da%20t%E1%BB%A9c%20th%C3%AC.webp?alt=media&token=1d36b154-0937-4c03-9a22-3d07617b7cb2",
+        "available_quantity": 20
+      }
+    },
+    "tags": ["sữa dưỡng thể", "Vaseline", "dưỡng da", "chăm sóc da", "làm đẹp"]
+},
+{
+  "id": "042",
+  "name": "[Combo] Bộ 2 Kem dưỡng sáng da đa tầng ngày & đêm Pond's Bright Miracle mờ thâm sạm với 50X Niasorcinol 45G+45G",
+  "price": 269000,
+  "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BCombo%5D%20B%E1%BB%99%202%20Kem%20d%C6%B0%E1%BB%A1ng%20s%C3%A1ng%20da%20%C4%91a%20t%E1%BA%A7ng%20ng%C3%A0y%20%26%20%C4%91%C3%AAm%20Pond's%20Bright%20Miracle%20m%E1%BB%9D%20th%C3%A2m%20s%E1%BA%A1m%20v%E1%BB%9Bi%2050X%20Niasorcinol%2045G%2B45G%2Fvn-11134207-7r98o-lsaw5h2mj2dg10.webp?alt=media&token=7900d81e-338d-4208-b3a3-5491af9fd147",
+  "description": "Combo bộ 2 kem dưỡng sáng da đa tầng ngày & đêm Pond's Bright Miracle giúp mờ thâm sạm với công thức chứa 50X Niasorcinol, mang lại làn da rạng rỡ.",
+  "category": "làm đẹp",
+  "rating": 4.8,
+  "colors": ["Combo 2 kem dưỡng"],
+  "colorImages": {
+      "Combo 2 kem dưỡng": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BCombo%5D%20B%E1%BB%99%202%20Kem%20d%C6%B0%E1%BB%A1ng%20s%C3%A1ng%20da%20%C4%91a%20t%E1%BA%A7ng%20ng%C3%A0y%20%26%20%C4%91%C3%AAm%20Pond's%20Bright%20Miracle%20m%E1%BB%9D%20th%C3%A2m%20s%E1%BA%A1m%20v%E1%BB%9Bi%2050X%20Niasorcinol%2045G%2B45G%2Fcombo%202%20Kem%20d%C6%B0%E1%BB%A1ng.webp?alt=media&token=1c041bfe-a133-4715-bbfd-8466313aee7d",
+          "available_quantity": 40
+      }
+  },
+  "tags": ["kem dưỡng da", "Pond's", "sáng da", "ngày và đêm", "làm đẹp"]
+},
+{
+  "id": "043",
+  "name": "[DIỆN MẠO MỚI] Sữa Rửa Mặt Simple lành tính và hiệu quả cho mọi loại da 150ml",
+  "price": 102000,
+  "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BDI%E1%BB%86N%20M%E1%BA%A0O%20M%E1%BB%9AI%5D%20S%E1%BB%AFa%20R%E1%BB%ADa%20M%E1%BA%B7t%20Simple%20l%C3%A0nh%20t%C3%ADnh%20v%C3%A0%20hi%E1%BB%87u%20qu%E1%BA%A3%20cho%20m%E1%BB%8Di%20lo%E1%BA%A1i%20da%20150ml%2Fvn-11134207-7ras8-m27r7y5klk1e51.webp?alt=media&token=a9083c86-e9a6-4baa-a881-b5a48d3d7913",
+  "description": "Sữa Rửa Mặt Simple lành tính và hiệu quả, phù hợp cho mọi loại da, cung cấp độ ẩm và giúp làm sạch sâu.",
+  "category": "làm đẹp",
+  "rating": 4.6,
+  "colors": ["Cấp ẩm", "Lành tính"],
+  "colorImages": {
+      "Cấp ẩm": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BDI%E1%BB%86N%20M%E1%BA%A0O%20M%E1%BB%9AI%5D%20S%E1%BB%AFa%20R%E1%BB%ADa%20M%E1%BA%B7t%20Simple%20l%C3%A0nh%20t%C3%ADnh%20v%C3%A0%20hi%E1%BB%87u%20qu%E1%BA%A3%20cho%20m%E1%BB%8Di%20lo%E1%BA%A1i%20da%20150ml%2Fc%E1%BA%A5p%20%E1%BA%A9m.webp?alt=media&token=c4ddee7b-ee2e-4b68-894d-e7f1bac282b0",
+          "available_quantity": 60
+      },
+      "Lành tính": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BDI%E1%BB%86N%20M%E1%BA%A0O%20M%E1%BB%9AI%5D%20S%E1%BB%AFa%20R%E1%BB%ADa%20M%E1%BA%B7t%20Simple%20l%C3%A0nh%20t%C3%ADnh%20v%C3%A0%20hi%E1%BB%87u%20qu%E1%BA%A3%20cho%20m%E1%BB%8Di%20lo%E1%BA%A1i%20da%20150ml%2Fl%C3%A0nh%20t%C3%ADnh.webp?alt=media&token=69f8ed85-5430-43d6-88d6-c366428a89b7",
+          "available_quantity": 45
+      }
+  },
+  "tags": ["sữa rửa mặt", "Simple", "lành tính", "chăm sóc da", "làm đẹp"]
+},
+{
+  "id": "044",
+  "name": "Dầu Gội Đầu cho nam Clear Men đánh bay gàu, ngứa và vi khuẩn mát lạnh cực đỉnh suốt ngày dài 630g",
+  "price": 195000,
+  "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%20%C4%90%E1%BA%A7u%20cho%20nam%20Clear%20Men%20%C4%91%C3%A1nh%20bay%20g%C3%A0u%2C%20ng%E1%BB%A9a%20v%C3%A0%20vi%20khu%E1%BA%A9n%20m%C3%A1t%20l%E1%BA%A1nh%20c%E1%BB%B1c%20%C4%91%E1%BB%89nh%20su%E1%BB%91t%20ng%C3%A0y%20d%C3%A0i%20630g%2Fvn-11134207-7ras8-m224ciq58jxa08.webp?alt=media&token=f8a3b03f-fbe8-4351-a4ce-4a8d447e7e06",
+  "description": "Dầu Gội Đầu cho nam Clear Men giúp đánh bay gàu, ngứa và vi khuẩn, mang lại cảm giác mát lạnh cực đỉnh suốt ngày dài.",
+  "category": "làm đẹp",
+  "rating": 4.7,
+  "colors": ["Mát lạnh bạc hà"],
+  "colorImages": {
+      "Mát lạnh bạc hà": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%20%C4%90%E1%BA%A7u%20cho%20nam%20Clear%20Men%20%C4%91%C3%A1nh%20bay%20g%C3%A0u%2C%20ng%E1%BB%A9a%20v%C3%A0%20vi%20khu%E1%BA%A9n%20m%C3%A1t%20l%E1%BA%A1nh%20c%E1%BB%B1c%20%C4%91%E1%BB%89nh%20su%E1%BB%91t%20ng%C3%A0y%20d%C3%A0i%20630g%2Fm%C3%A1t%20l%E1%BA%A1nh%20b%E1%BA%A1c%20h%C3%A0.webp?alt=media&token=93eac6c2-2223-41ee-a423-5ab9b6d59067",
+          "available_quantity": 55
+      }
+  },
+  "tags": ["dầu gội đầu", "Clear Men", "gàu", "mát lạnh", "chăm sóc tóc", "làm đẹp"]
+},
+{
+  "id": "045",
+  "name": "[HB Gift - PC] Sữa tắm Lifebuoy Chăm Sóc Chuyên Sâu, giúp detox sạch sâu và giảm mụn trên da chai 100g",
+  "price": 100000,
+  "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BHB%20Gift%20-%20PC%5D%20S%E1%BB%AFa%20t%E1%BA%AFm%20Lifebuoy%20Ch%C4%83m%20S%C3%B3c%20Chuy%C3%AAn%20S%C3%A2u%2C%20gi%C3%BAp%20detox%20s%E1%BA%A1ch%20s%C3%A2u%20v%C3%A0%20gi%E1%BA%A3m%20m%E1%BB%A5n%20tr%C3%AAn%20da%20chai%20100g%2Fsg-11134301-7rdy4-m186ry3blh3n49%20(1).webp?alt=media&token=4f305758-23f5-4fcb-a620-b36c2f59db26",
+  "description": "Sữa tắm Lifebuoy Chăm Sóc Chuyên Sâu giúp detox sạch sâu và giảm mụn trên da, mang lại làn da sạch sẽ và khỏe mạnh.",
+  "category": "làm đẹp",
+  "rating": 4.7,
+  "colors": ["Than hoạt tính", "Muối hồng"],
+  "colorImages": {
+      "Than hoạt tính": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BHB%20Gift%20-%20PC%5D%20S%E1%BB%AFa%20t%E1%BA%AFm%20Lifebuoy%20Ch%C4%83m%20S%C3%B3c%20Chuy%C3%AAn%20S%C3%A2u%2C%20gi%C3%BAp%20detox%20s%E1%BA%A1ch%20s%C3%A2u%20v%C3%A0%20gi%E1%BA%A3m%20m%E1%BB%A5n%20tr%C3%AAn%20da%20chai%20100g%2Fthan%20ho%E1%BA%A1t%20t%C3%ADnh.webp?alt=media&token=f1fc011d-37e3-45bd-a2fd-1f0032d4cd4f",
+          "available_quantity": 40
+      },
+      "Muối hồng": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2F%5BHB%20Gift%20-%20PC%5D%20S%E1%BB%AFa%20t%E1%BA%AFm%20Lifebuoy%20Ch%C4%83m%20S%C3%B3c%20Chuy%C3%AAn%20S%C3%A2u%2C%20gi%C3%BAp%20detox%20s%E1%BA%A1ch%20s%C3%A2u%20v%C3%A0%20gi%E1%BA%A3m%20m%E1%BB%A5n%20tr%C3%AAn%20da%20chai%20100g%2Fmu%E1%BB%91i%20h%E1%BB%93ng.webp?alt=media&token=bfe22607-6c10-46be-ba23-f081f1538215",
+          "available_quantity": 35
+      }
+  },
+  "tags": ["sữa tắm", "Lifebuoy", "detox", "chăm sóc da", "làm đẹp"]
+},
+{
+  "id": "046",
+  "name": "Dầu Gội/ Dầu Xả TRESemmé Đẹp Chuẩn Salon Cho Tóc Vào Nếp, Chắc Khỏe, Giảm Gãy Rụng 640g/ 620g",
+  "price": 206000,
+  "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%2Fsg-11134301-7rdy4-lxi2brw661cwe6.webp?alt=media&token=53aa42c5-94c0-44ee-9d28-9cc40dde2f50",
+  "description": "Dầu Gội và Dầu Xả TRESemmé giúp tóc vào nếp, chắc khỏe và giảm gãy rụng, mang lại mái tóc đẹp chuẩn salon.",
+  "category": "làm đẹp",
+  "rating": 4.8,
+  "colors": ["Dầu Gội", "Dầu Xả", "Xả vào nếp suôn mượt", "Gội vào nếp suôn mượt", "Gội ngăn gãy rụng tóc"],
+  "colorImages": {
+      "Xả vào nếp suôn mượt": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%2Fx%E1%BA%A3%20v%C3%A0o%20n%E1%BA%BFp%20su%C3%B4n%20m%C6%B0%E1%BB%A3t.webp?alt=media&token=96b5a7d5-b4cf-4c32-8a26-8be76452f3c3",
+          "available_quantity": 25
+      },
+      "Gội vào nếp suôn mượt": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%2Fg%E1%BB%99i%20v%C3%A0o%20n%E1%BA%BFp%20su%C3%B4n%20m%E1%BB%B0%E1%BB%A3t.webp?alt=media&token=3090802d-b6a3-473e-bc56-12eea3d97a37",
+          "available_quantity": 30
+      },
+      "Gội ngăn gãy rụng tóc": {
+          "image": "https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/beautyful%2FD%E1%BA%A7u%20G%E1%BB%99i%2Fg%E1%BB%99i%20ng%C4%83n%20g%C3%A3y%20r%E1%BB%A5ng%20t%C3%B3c.webp?alt=media&token=a11a95a9-8262-4c10-807e-5970200f2b48",
+          "available_quantity": 20
+      }
+  },
+  "tags": ["dầu gội", "dầu xả", "TRESemmé", "chăm sóc tóc", "làm đẹp"]
+}
+
+]
 const HomeScreen = ({ navigation }: any) => {
   const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
   const [products, setProducts] = useState<{ id: string;[key: string]: any }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasAddedProducts, setHasAddedProducts] = useState(false); // xử lý việc thêm dữ liệu
   useEffect(() => {
     const fetchDataCate = async () => {
       try {
@@ -249,7 +380,6 @@ const HomeScreen = ({ navigation }: any) => {
         console.error('Error getting documents: ', error);
       }
     };
-
     fetchDataCate();
     fetchDataItems();
 
@@ -258,7 +388,6 @@ const HomeScreen = ({ navigation }: any) => {
       setProducts([]);
     }; // Clean up function to reset state
   }, []);
-
   const featuredProductShoe = {
     id: 1,
     name: 'Shoes',
@@ -345,7 +474,12 @@ const HomeScreen = ({ navigation }: any) => {
   const handleFilter = () => {
     navigation.navigate('filter');
   };
-
+  const handleSplashAdPress = () => {
+      navigation.navigate('ProductListing', { category: {name:'làm đẹp'}, categories });
+    };
+  const handleSplashAdClose = () => {
+    // Handle close action if needed
+  };
   // Render item function for FlatListss
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
@@ -406,23 +540,33 @@ const HomeScreen = ({ navigation }: any) => {
 
   // Data for FlatList
   const data = [
-    { type: 'header' },
-    { type: 'search' },
-    { type: 'featuredBanner' },
-    { type: 'categoryList' },
-    { type: 'discountedBanner' },
-    { type: 'productGrid' },
+    { type: 'header', id:1 },
+    { type: 'search', id:2 },
+    { type: 'featuredBanner', id:3 },
+    { type: 'categoryList', id:4 },
+    { type: 'discountedBanner', id:5 },
+    { type: 'productGrid', id:6 },
   ];
+  const handleAddProductsComplete = () => {
+    setHasAddedProducts(true); // Cập nhật giá trị thành true khi hoàn thành
+  };
   return (
 
-    <LinearGradient colors={['#ffffff', '#ffffff']} style={styles.container}>
-      {/* <TouchableOpacity onPress={()=>  <AddProducts productsData={dongho}/> } style = {{backgroundColor:'white', height:100}}/> */}
-      {/* <AddProducts productsData={dongho}/> */}
+    <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
+      {/* {!hasAddedProducts && lamdep.length > 0 && (
+        <AddProducts productsData={lamdep} onComplete={handleAddProductsComplete} />
+      )} */}
+      <SplashAd 
+        onClose={handleSplashAdClose} 
+        onPress={handleSplashAdPress} 
+        imageUri="https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/Splash%20advertising%2Fvn-11134258-7ras8-m27zuycibr90b4.png?alt=media&token=0c154377-9b0a-41ba-8f80-042ca0c570dd"
+        navigation={navigation}
+      />
       <FlatList
         data={data}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
-        keyExtractor={item => item.id ? item.id.toString() : item.name}
+        keyExtractor={item => item.id ? item.id.toString() : item.type}
       />
     </LinearGradient>
   );
