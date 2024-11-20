@@ -456,13 +456,7 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   const handleProductPress = (product: any) => {
-    const auth = getAuth(app);
-    const user = auth.currentUser;
-    if (user) {
-      navigation.navigate('ProductDetails', { product });
-    } else {
-      navigation.navigate('Welcome', { returnTo: { screen: 'ProductDetails', params: { product } } });
-    }
+    navigation.navigate('ProductDetails', { product });
   };
 
   const handleSearch = (text: string) => {

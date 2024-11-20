@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const CheckoutScreen = ({ navigation }) => {
+const CheckoutScreen = ({ navigation, route }) => {
   const [checkoutStage, setCheckoutStage] = useState('cart');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('visa');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [rating, setRating] = useState(0);
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    if (route.params?.product) {
+      const product = route.params.product;
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find(item => item.id === product.id);
+        if (existingItem) {
+          return prevItems.map(item =>
+            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          );
+        } else {
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+    }
+  }, [route.params?.product]);
 
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -364,36 +381,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-const cartItems = [
-  {
-    name: 'Headphone',
-    description: 'Consequat ex eu',
-    price: 500,
-    quantity: 1,
-    image: 'https://example.com/headphone1.jpg',
-  },
-  {
-    name: 'Headphone',
-    description: 'Consequat ex eu',
-    price: 300,
-    quantity: 1,
-    image: 'https://example.com/headphone2.jpg',
-  },
-  {
-    name: 'Smartphone',
-    description: 'Consequat ex eu',
-    price: 1000,
-    quantity: 1,
-    image: 'https://example.com/smartphone1.jpg',
-  },
-  {
-    name: 'Smartphone',
-    description: 'Consequat ex eu',
-    price: 1000,
-    quantity: 1,
-    image: 'https://example.com/smartphone2.jpg',
-  },
-];
 
 export default CheckoutScreen;

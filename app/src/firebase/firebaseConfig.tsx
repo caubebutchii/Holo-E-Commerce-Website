@@ -23,5 +23,5 @@ const db = getFirestore(app);
 // Khởi tạo Authentication
 const auth = getAuth(app);
 
-console.log('Firebase initialized successfully without firestore')
-export { app,db, auth};
+console.log('Firebase initialized successfully with Firestore');
+export { app, db, auth };

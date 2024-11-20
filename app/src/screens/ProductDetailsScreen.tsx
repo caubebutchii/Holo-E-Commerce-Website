@@ -165,30 +165,34 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     const auth = getAuth(app);
   if (!auth.currentUser) {
     navigation.navigate('Welcome', {
-      returnTo: {
-        screen: 'ProductDetails',
-        params: { product, action: 'addToCart' }
-      }
-    });
-    return;
-  }
-    setSelectedAddOrBuy('Add to Card')
+    if (!auth.currentUser) {
+      navigation.navigate('Welcome', {
+        returnTo: {
+          screen: 'ProductDetails',
+          params: { product, action: 'addToCart' }
+        }
+      });
+      return;
+    }
+    setSelectedAddOrBuy('Add to Cart');
     setModalVisible(true);
+    navigation.navigate('Checkout', { product });
   };
-
+  
   const handleBuyNow = () => {
     const auth = getAuth(app);
-  if (!auth.currentUser) {
-    navigation.navigate('Welcome', {
-      returnTo: {
-        screen: 'ProductDetails',
-        params: { product, action: 'buyNow' }
-      }
-    });
-    return;
-  }
-    setSelectedAddOrBuy('Buy Now')
+    if (!auth.currentUser) {
+      navigation.navigate('Welcome', {
+        returnTo: {
+          screen: 'ProductDetails',
+          params: { product, action: 'buyNow' }
+        }
+      });
+      return;
+    }
+    setSelectedAddOrBuy('Buy Now');
     setModalVisible(true);
+    navigation.navigate('Checkout', { product });
   };
   const renderColorOption = ({ item: [color, image] }: any) => (
     <TouchableOpacity
