@@ -1,49 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useUser } from '../context/UserContext';
 
 const AccountScreen = ({ navigation }: any) => {
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useUser();
   const auth = getAuth(app);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-      if (!user) {
-        navigation.navigate('Welcome');
+    const fetchUserData = async (user) => {
+      const db = getFirestore(app);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        setUser(userDoc.data());
       }
-    });
+    };
 
-    return unsubscribe;
-  }, [navigation]);
+    if (user) {
+      fetchUserData(user);
+    } else {
+      navigation.replace('Welcome');
+    }
+  }, [navigation, user, setUser]);
 
   const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      navigation.navigate('Welcome');
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
+    Alert.alert(
+      'Xác nhận đăng xuất',
+      'Bạn có chắc chắn muốn đăng xuất?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              navigation.replace('Welcome');
+            } catch (error) {
+              console.error('Error signing out: ', error);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   if (!user) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Vui lòng đăng nhập</Text>
-        <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.signUpButtonText}>Đăng ký ngay</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return null; // Return null to avoid rendering anything if user is not logged in
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Hồi dân IT</Text>
+          <Text style={styles.headerTitle}>{user.name}</Text>
         </View>
 
         {[
@@ -107,25 +123,6 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: '#FF3B30',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  signUpButton: {
-    marginTop: 20,
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  signUpButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },

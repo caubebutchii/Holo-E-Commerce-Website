@@ -163,8 +163,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   );
   const handleAddToCart = () => {
     const auth = getAuth(app);
-  if (!auth.currentUser) {
-    navigation.navigate('Welcome', {
     if (!auth.currentUser) {
       navigation.navigate('Welcome', {
         returnTo: {

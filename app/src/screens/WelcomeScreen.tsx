@@ -10,10 +10,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
+import { useUser } from '../context/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }: any) => {
+  const { setUser } = useUser();
+
   const handleGoogleSignIn = () => {
     
   };
@@ -34,12 +37,13 @@ const WelcomeScreen = ({ navigation }: any) => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-          navigation.navigate('Main');
+        setUser(user);
+        navigation.replace('Main');
       }
     });
 
     return () => unsubscribe();
-  }, [navigation]);
+  }, [navigation, setUser]);
 
   return (
     <ImageBackground

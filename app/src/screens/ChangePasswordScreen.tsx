@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
+import { app } from '../firebase/firebaseConfig';
 
 export default function ChangePasswordScreen({ navigation }) {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -16,9 +19,70 @@ export default function ChangePasswordScreen({ navigation }) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const handleChangePassword = () => {
-    // Implement password change logic here
+  useEffect(() => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setErrors({});
+  }, []);
+
+  const validatePassword = (password) => {
+    if (password.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số';
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      return 'Mật khẩu phải có ít nhất một chữ cái viết hoa, một chữ cái viết thường và một chữ số';
+    }
+    return '';
+  };
+
+  const handleChangePassword = async () => {
+    const newErrors = {};
+
+    if (!currentPassword) {
+      newErrors.currentPassword = 'Vui lòng nhập mật khẩu hiện tại';
+    }
+
+    if (!newPassword) {
+      newErrors.newPassword = 'Vui lòng nhập mật khẩu mới';
+    } else {
+      const validationError = validatePassword(newPassword);
+      if (validationError) {
+        newErrors.newPassword = validationError;
+      } else if (currentPassword === newPassword) {
+        newErrors.newPassword = 'Mật khẩu mới không được trùng với mật khẩu hiện tại';
+      }
+    }
+
+    if (!confirmNewPassword) {
+      newErrors.confirmNewPassword = 'Vui lòng xác nhận mật khẩu mới';
+    } else if (newPassword !== confirmNewPassword) {
+      newErrors.confirmNewPassword = 'Mật khẩu xác nhận không khớp';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+    try {
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      Alert.alert('Thành công', 'Mật khẩu đã được thay đổi', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      setErrors({ currentPassword: 'Mật khẩu hiện tại không đúng' });
+    }
   };
 
   return (
@@ -43,6 +107,7 @@ export default function ChangePasswordScreen({ navigation }) {
             <Ionicons name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
           </TouchableOpacity>
         </View>
+        {errors.currentPassword && <Text style={styles.errorText}>{errors.currentPassword}</Text>}
       </View>
 
       <View style={styles.inputContainer}>
@@ -58,6 +123,7 @@ export default function ChangePasswordScreen({ navigation }) {
             <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
           </TouchableOpacity>
         </View>
+        {errors.newPassword && <Text style={styles.errorText}>{errors.newPassword}</Text>}
       </View>
 
       <View style={styles.inputContainer}>
@@ -73,6 +139,7 @@ export default function ChangePasswordScreen({ navigation }) {
             <Ionicons name={showConfirmNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
           </TouchableOpacity>
         </View>
+        {errors.confirmNewPassword && <Text style={styles.errorText}>{errors.confirmNewPassword}</Text>}
       </View>
 
       <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
@@ -127,5 +194,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
   },
 });

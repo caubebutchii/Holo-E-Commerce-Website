@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,53 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { app } from '../firebase/firebaseConfig';
 
 export default function UpdateProfileScreen({ navigation }) {
   const [name, setName] = useState('Hồi dân IT');
   const [email, setEmail] = useState('hoidanit@gmail.com');
   const [phone, setPhone] = useState('');
+  const [user, setUser] = useState(null);
 
-  const handleUpdateProfile = () => {
-    // Implement profile update logic here
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setName(userData.name);
+        setEmail(userData.email);
+        setPhone(userData.phone);
+        setUser(userData);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleUpdateProfile = async () => {
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        name,
+        phone,
+      });
+      Alert.alert('Thành công', 'Thông tin đã được cập nhật', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert('Lỗi', 'Cập nhật thông tin thất bại');
+    }
   };
 
   return (
@@ -44,6 +81,7 @@ export default function UpdateProfileScreen({ navigation }) {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={false}
         />
       </View>
 

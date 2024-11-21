@@ -14,8 +14,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
+import { useUser } from '../context/UserContext';
 
 const SignInScreen = ({ navigation }: any) => {
+  const { setUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +31,8 @@ const SignInScreen = ({ navigation }: any) => {
     if (Object.keys(newErrors).length === 0) {
     try {
       const auth = getAuth(app);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      setUser(userCredential.user);
       navigation.navigate('Main');
     } catch (error) {
       Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');

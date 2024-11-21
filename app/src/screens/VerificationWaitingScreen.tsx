@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { getAuth, onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
+import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
 
 const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const [isVerified, setIsVerified] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { email } = route.params;
+  const { email, code } = route.params;
+  const [inputCode, setInputCode] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -35,11 +38,24 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     };
   }, [navigation]);
 
+  const handleVerifyCode = () => {
+    if (inputCode === code) {
+      setIsVerified(true);
+      setTimeout(() => {
+        navigation.navigate('SignIn');
+      }, 2000);
+    } else {
+      setError('Mã xác thực không đúng');
+    }
+  };
+
   const handleResendEmail = async () => {
     const auth = getAuth(app);
     if (auth.currentUser) {
       try {
-        await sendEmailVerification(auth.currentUser);
+        const newCode = generateVerificationCode();
+        setVerificationCode(newCode);
+        await sendVerificationCodeEmail(email, newCode);
         setCountdown(60);
       } catch (error) {
         console.error('Error resending verification email:', error);
@@ -51,7 +67,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     <View style={styles.container}>
       <Text style={styles.title}>Xác thực Email</Text>
       <Text style={styles.message}>
-        Chúng tôi đã gửi email xác thực đến {email}. Vui lòng kiểm tra hộp thư của bạn và nhấp vào liên kết xác thực.
+        Chúng tôi đã gửi mã xác thực đến {email}. Vui lòng kiểm tra hộp thư của bạn và nhập mã xác thực.
       </Text>
       {isVerified ? (
         <View>
@@ -60,6 +76,16 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
         </View>
       ) : (
         <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập mã xác thực"
+            value={inputCode}
+            onChangeText={setInputCode}
+          />
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          <TouchableOpacity style={styles.verifyButton} onPress={handleVerifyCode}>
+            <Text style={styles.verifyButtonText}>Xác thực</Text>
+          </TouchableOpacity>
           <ActivityIndicator size="large" color="#4CAF50" style={styles.loader} />
           <TouchableOpacity 
             style={[styles.resendButton, countdown > 0 && styles.disabledButton]} 
@@ -67,7 +93,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
             disabled={countdown > 0}
           >
             <Text style={styles.resendButtonText}>
-              {countdown > 0 ? `Gửi lại email xác thực (${countdown}s)` : 'Gửi lại email xác thực'}
+              {countdown > 0 ? `Gửi lại mã xác thực (${countdown}s)` : 'Gửi lại mã xác thực'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -117,6 +143,31 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  verifyButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  verifyButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
   },
 });
 

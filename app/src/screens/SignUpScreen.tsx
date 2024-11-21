@@ -12,6 +12,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
+import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const SignUpScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -19,6 +21,7 @@ const SignUpScreen = ({ navigation }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [errors, setErrors] = useState({});
+  const [verificationCode, setVerificationCode] = useState('');
 
   const handleSignUp = async () => {
     const newErrors = {};
@@ -31,8 +34,24 @@ const SignUpScreen = ({ navigation }: any) => {
       try {
         const auth = getAuth(app);
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await sendEmailVerification(userCredential.user);
-        navigation.navigate('VerificationWaiting', { email});
+        const user = userCredential.user;
+        await sendEmailVerification(user); // Send email verification
+
+        // Generate verification code
+        const code = generateVerificationCode();
+        setVerificationCode(code);
+        await sendVerificationCodeEmail(email, code);
+
+        // Save user information to Firestore
+        const db = getFirestore(app);
+        await setDoc(doc(db, 'users', user.uid), {
+          id: user.uid,
+          name,
+          email,
+          phone: '',
+        });
+
+        navigation.navigate('VerificationWaiting', { email, code });
       } catch (error) {
         Alert.alert('Lỗi', error.message);
       }
