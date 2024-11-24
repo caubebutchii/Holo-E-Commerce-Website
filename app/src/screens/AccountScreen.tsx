@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Ale
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
 
 const AccountScreen = ({ navigation }: any) => {
@@ -19,7 +19,7 @@ const AccountScreen = ({ navigation }: any) => {
       }
     };
 
-    if (user) {
+    if (user && user.uid) {
       fetchUserData(user);
     } else {
       navigation.replace('Welcome');
@@ -49,6 +49,27 @@ const AccountScreen = ({ navigation }: any) => {
       ],
       { cancelable: false }
     );
+  };
+
+  const handleUpdateProfile = async (updatedData) => {
+    const db = getFirestore(app);
+    const userDocRef = doc(db, 'users', user.uid);
+    try {
+      await updateDoc(userDocRef, updatedData);
+      setUser({ ...user, ...updatedData }); // Update user context
+    } catch (error) {
+      console.error('Error updating profile: ', error);
+    }
+  };
+
+  const handleChangePassword = async (newPassword) => {
+    const auth = getAuth(app);
+    try {
+      await auth.currentUser.updatePassword(newPassword);
+      Alert.alert('Thành công', 'Mật khẩu đã được thay đổi');
+    } catch (error) {
+      console.error('Error changing password: ', error);
+    }
   };
 
   if (!user) {

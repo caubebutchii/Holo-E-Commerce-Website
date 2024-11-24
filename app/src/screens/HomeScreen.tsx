@@ -14,6 +14,8 @@ import { collection, getDocs, query, updateDoc, where,doc } from "firebase/fires
 import AddProduct from '../firebase/addData';
 import AddProducts from '../firebase/addData';
 import SplashAd from '../components/SplashAd';
+import { useUser } from '../context/UserContext';
+
 const tui = [
   {
     "id": "021",
@@ -351,6 +353,9 @@ const lamdep = [
 
 ]
 const HomeScreen = ({ navigation }: any) => {
+  // đây là user context lấy từ userProvider
+  const { user } = useUser();
+
   const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
   const [products, setProducts] = useState<{ id: string;[key: string]: any }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

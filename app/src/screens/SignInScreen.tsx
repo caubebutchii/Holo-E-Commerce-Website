@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { useUser } from '../context/UserContext';
+import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
 
 const SignInScreen = ({ navigation }: any) => {
   const { setUser } = useUser();
@@ -32,7 +33,15 @@ const SignInScreen = ({ navigation }: any) => {
     try {
       const auth = getAuth(app);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
+      const user = userCredential.user;
+
+      // Fetch user information from Firestore
+      const db = getFirestore(app);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        setUser(userDoc.data()); // Update user context
+      }
+
       navigation.navigate('Main');
     } catch (error) {
       Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');

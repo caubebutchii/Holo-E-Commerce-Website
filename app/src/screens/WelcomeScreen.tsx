@@ -17,6 +17,18 @@ const { width, height } = Dimensions.get('window');
 const WelcomeScreen = ({ navigation }: any) => {
   const { setUser } = useUser();
 
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        navigation.replace('Main');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigation, setUser]);
+
   const handleGoogleSignIn = () => {
     
   };
@@ -32,18 +44,6 @@ const WelcomeScreen = ({ navigation }: any) => {
   const handleSignUp = () => {
     navigation.navigate('SignUp');
   };
-
-  useEffect(() => {
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        navigation.replace('Main');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigation, setUser]);
 
   return (
     <ImageBackground

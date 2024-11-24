@@ -7,11 +7,13 @@ import { db } from '../firebase/firebaseConfig';
 import ProductGrid from '../components/ProductGrid';
 import { app } from '../firebase/firebaseConfig';
 import { getAuth, signOut } from 'firebase/auth';
-
+import { useUser } from '../context/UserContext';
 const { width, height } = Dimensions.get('window');
 
 const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { product } = route.params;
+  // Lấy user từ context
+  const { user } = useUser(); 
   const [products, setProducts] = useState<any[]>([])
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
@@ -161,31 +163,23 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       </View>
     </>
   );
+
+  // Hàm xử lý việc thêm vào giỏ hàng
   const handleAddToCart = () => {
-    const auth = getAuth(app);
-    if (!auth.currentUser) {
-      navigation.navigate('Welcome', {
-        returnTo: {
-          screen: 'ProductDetails',
-          params: { product, action: 'addToCart' }
-        }
-      });
+    // Nếu user chưa đăng nhập thì chuyển huớng sang welcome
+    if (!user || !user.uid) {
+      navigation.navigate('Welcome');
       return;
     }
+    // Hiển thị modal và chuyển sang trang checkout
     setSelectedAddOrBuy('Add to Cart');
     setModalVisible(true);
     navigation.navigate('Checkout', { product });
   };
   
   const handleBuyNow = () => {
-    const auth = getAuth(app);
-    if (!auth.currentUser) {
-      navigation.navigate('Welcome', {
-        returnTo: {
-          screen: 'ProductDetails',
-          params: { product, action: 'buyNow' }
-        }
-      });
+    if (!user || !user.uid) {
+      navigation.navigate('Welcome');
       return;
     }
     setSelectedAddOrBuy('Buy Now');

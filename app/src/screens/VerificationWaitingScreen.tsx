@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Alert, Button } from 'react-native';
 import { getAuth, onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { useUser } from '../context/UserContext'; // Import useUser
 
 const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const [isVerified, setIsVerified] = useState(false);
@@ -10,6 +12,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const { email, code } = route.params;
   const [inputCode, setInputCode] = useState('');
   const [error, setError] = useState('');
+  const { setUser } = useUser(); // Get setUser from context
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -38,12 +41,29 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     };
   }, [navigation]);
 
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async () => {
     if (inputCode === code) {
-      setIsVerified(true);
-      setTimeout(() => {
-        navigation.navigate('SignIn');
-      }, 2000);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userData = {
+            id: user.uid,
+            name: route.params.name,
+            email: user.email,
+            phone: '',
+          };
+          await setDoc(doc(db, 'users', user.uid), userData);
+          setUser(userData); // Update user context
+          setIsVerified(true);
+          setTimeout(() => {
+            navigation.navigate('SignIn');
+          }, 2000);
+        } catch (error) {
+          console.error('Error saving user information:', error);
+        }
+      }
     } else {
       setError('Mã xác thực không đúng');
     }
@@ -63,6 +83,10 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleOk = () => {
+    navigation.navigate('SignIn');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Xác thực Email</Text>
@@ -72,7 +96,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
       {isVerified ? (
         <View>
           <Text style={styles.successMessage}>Email đã được xác thực!</Text>
-          <Text>Đang chuyển hướng...</Text>
+          <Button title="OK" onPress={handleOk} />
         </View>
       ) : (
         <View>
