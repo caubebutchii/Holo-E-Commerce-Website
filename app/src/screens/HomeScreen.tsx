@@ -555,12 +555,12 @@ const HomeScreen = ({ navigation }: any) => {
       {/* {!hasAddedProducts && lamdep.length > 0 && (
         <AddProducts productsData={lamdep} onComplete={handleAddProductsComplete} />
       )} */}
-      <SplashAd 
+      {/* <SplashAd 
         onClose={handleSplashAdClose} 
         onPress={handleSplashAdPress} 
         imageUri="https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/Splash%20advertising%2Fvn-11134258-7ras8-m27zuycibr90b4.png?alt=media&token=0c154377-9b0a-41ba-8f80-042ca0c570dd"
         navigation={navigation}
-      />
+      /> */}
       <FlatList
         data={data}
         renderItem={renderItem}
