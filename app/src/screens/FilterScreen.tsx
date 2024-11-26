@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 const FilterScreen = ({ navigation, route }: any) => {
-  const [priceRange, setPriceRange] = useState({ min: '0', max: '1000000' });
+  const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [rating, setRating] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
   const [products, setProducts] = useState<{ id: string;[key: string]: any }[]>([]);
-  //set tags từ products
   const [tags, setTags] = useState<string[]>([]);
-  //set colors từ products
   const [colors, setColors] = useState<string[]>([]);
 
   useEffect(() => {
@@ -61,8 +60,25 @@ const FilterScreen = ({ navigation, route }: any) => {
     return () => {
       setCategories([]);
       setProducts([]);
-    }; // Clean up function to reset state
+    };
   }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
+  };
+
+  const handlePriceChange = (index: number, value: string) => {
+    const numValue = parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+    setPriceRange(prev => {
+      const newRange = [...prev];
+      newRange[index] = numValue;
+      return newRange;
+    });
+  };
+
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -78,8 +94,8 @@ const FilterScreen = ({ navigation, route }: any) => {
   const applyFilters = () => {
     const filters = {
       priceRange: {
-        min: parseInt(priceRange.min) || 0,
-        max: parseInt(priceRange.max) || 1000000,
+        min: Math.min(...priceRange),
+        max: Math.max(...priceRange),
       },
       rating,
       category: selectedCategory,
@@ -89,6 +105,12 @@ const FilterScreen = ({ navigation, route }: any) => {
 
     navigation.navigate('ProductListing', { filters });
   };
+
+  const CustomMarker = () => (
+    <View style={styles.markerContainer}>
+      <View style={styles.marker} />
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -101,20 +123,34 @@ const FilterScreen = ({ navigation, route }: any) => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Price range</Text>
-        <View style={styles.priceInputContainer}>
+        <View style={styles.priceRangeContainer}>
           <TextInput
             style={styles.priceInput}
-            value={priceRange.min}
-            onChangeText={(text) => setPriceRange(prev => ({ ...prev, min: text }))}
+            value={formatPrice(priceRange[0])}
+            onChangeText={(text) => handlePriceChange(0, text)}
             keyboardType="numeric"
-            placeholder="Min"
           />
+          <Text style={styles.priceSeparator}>-</Text>
           <TextInput
             style={styles.priceInput}
-            value={priceRange.max}
-            onChangeText={(text) => setPriceRange(prev => ({ ...prev, max: text }))}
+            value={formatPrice(priceRange[1])}
+            onChangeText={(text) => handlePriceChange(1, text)}
             keyboardType="numeric"
-            placeholder="Max"
+          />
+        </View>
+        <View style={styles.sliderContainer}>
+          <MultiSlider
+            values={[priceRange[0], priceRange[1]]}
+            min={0}
+            max={20000000}
+            step={100000}
+            sliderLength={280}
+            onValuesChange={setPriceRange}
+            selectedStyle={styles.selectedTrack}
+            unselectedStyle={styles.unselectedTrack}
+            containerStyle={styles.sliderContainerStyle}
+            trackStyle={styles.track}
+            customMarker={CustomMarker}
           />
         </View>
       </View>
@@ -140,14 +176,17 @@ const FilterScreen = ({ navigation, route }: any) => {
         <View style={styles.optionsContainer}>
           {categories.map((category) => (
             <TouchableOpacity
-              key={category.id} // Assuming each category has a unique id
+              key={category.id}
               style={[
                 styles.optionButton,
                 selectedCategory === category.name && styles.selectedOption
               ]}
               onPress={() => setSelectedCategory(category.name)}
             >
-              <Text style={styles.optionText}>{category.name}</Text>
+              <Text style={[
+                styles.optionText,
+                selectedCategory === category.name && styles.selectedOptionText
+              ]}>{category.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -165,7 +204,10 @@ const FilterScreen = ({ navigation, route }: any) => {
               ]}
               onPress={() => toggleTag(tag)}
             >
-              <Text style={styles.optionText}>{tag}</Text>
+              <Text style={[
+                styles.optionText,
+                selectedTags.includes(tag) && styles.selectedOptionText
+              ]}>{tag}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -183,7 +225,10 @@ const FilterScreen = ({ navigation, route }: any) => {
               ]}
               onPress={() => toggleColor(color)}
             >
-              <Text style={styles.optionText}>{color}</Text>
+              <Text style={[
+                styles.optionText,
+                selectedColors.includes(color) && styles.selectedOptionText
+              ]}>{color}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -220,16 +265,62 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
   },
-  priceInputContainer: {
+  priceRangeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   priceInput: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 8,
-    width: '48%',
+    width: '45%',
+    fontSize: 14,
+  },
+  priceSeparator: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  sliderContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  sliderContainerStyle: {
+    height: 50,
+  },
+  track: {
+    height: 4,
+    borderRadius: 2,
+  },
+  selectedTrack: {
+    backgroundColor: '#99FFEE',
+  },
+  unselectedTrack: {
+    backgroundColor: '#E0E0E0',
+  },
+  markerContainer: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  marker: {
+    width: 12,
+    height: 12,
+    backgroundColor: '#99FFEE',
+    borderRadius: 6,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -256,11 +347,15 @@ const styles = StyleSheet.create({
   optionText: {
     color: '#000',
   },
+  selectedOptionText: {
+    color: '#fff',
+  },
   applyButton: {
     backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 16,
   },
   applyButtonText: {
     color: '#fff',
