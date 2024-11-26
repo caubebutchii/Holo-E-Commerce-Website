@@ -38,6 +38,11 @@ const CheckoutScreen = ({ navigation, route }) => {
           setCartItems(cartDoc.data().items);
         }
       }
+      else
+      {
+        // Nếu không có user đăng nhập thì set giỏ hàng rỗng
+        setCartItems([]);
+      }
     };
 
     fetchCartItems();
