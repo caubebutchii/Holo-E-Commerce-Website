@@ -176,6 +176,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     // chỗ này sẽ thêm sản phẩm vào giỏ hàng
     try {
       // Lấy giỏ hàng của user bằng cách truy cập vào collection 'carts' với doc id là uid của user
+      // cartRef là địa chỉ của giỏ hàng, có dạng 'carts/user.uid'
       const cartRef = doc(db, 'carts', user.uid);
       // Lấy thông tin giỏ hàng của user từ firestore bằng hàm getDoc với tham số là cartRef vừa lấy được
       const cartDoc = await getDoc(cartRef);
@@ -186,6 +187,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
         const cartData = cartDoc.data();
         // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
         
+        // existingItem có giá trị là sản phẩm trong giỏ hàng có id trùng với id của sản phẩm cần thêm vào giỏ hàng
         const existingItem = cartData.items.find((item: any) => item.id === product.id);
         // Nếu sản phẩm đã tồn tại trong giỏ hàng thì tăng số lượng lên 1
         if (existingItem) {
@@ -224,7 +226,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     }
     // setSelectedAddOrBuy('Buy Now');
     // setModalVisible(true);
-    navigation.navigate('Checkout', { product, 'Buy Now' });
+    navigation.navigate('Checkout', { product, color: selectedColor, size: selectedSize, quantity: 1 , buyNow: true});
   };
   const renderColorOption = ({ item: [color, image] }: any) => (
     <TouchableOpacity

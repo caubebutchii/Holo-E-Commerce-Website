@@ -14,8 +14,8 @@ import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { app } from '../firebase/firebaseConfig';
 
 export default function UpdateProfileScreen({ navigation }) {
-  const [name, setName] = useState('Hồi dân IT');
-  const [email, setEmail] = useState('hoidanit@gmail.com');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [user, setUser] = useState(null);
 

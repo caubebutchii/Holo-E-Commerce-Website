@@ -74,7 +74,6 @@ const AccountScreen = ({ navigation }: any) => {
             // tryền screen vào navigation.navigate
             onPress={() => item.screen && navigation.navigate(item.screen)}
           >
-            // sử dụng icon từ Ionicons
             <Ionicons name={item.icon} size={24} color="#4CAF50" />
             <Text style={styles.menuItemText}>{item.label}</Text>
             <Ionicons name="chevron-forward" size={24} color="#777" />

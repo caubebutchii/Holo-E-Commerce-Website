@@ -16,15 +16,18 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     const auth = getAuth(app);
+    // Kiểm tra xem user đã xác thực email chưa
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.emailVerified) {
         setIsVerified(true);
+        // Nếu đã xác thực email thì chuyển hướng đến trang đăng nhập
         setTimeout(() => {
-          navigation.navigate('SignUp');
+          navigation.navigate('SignIn');
         }, 2000);
       }
     });
 
+    // function này thực hiện việc giảm countdown mỗi giây
     const timer = setInterval(() => {
       setCountdown((prevCountdown) => {
         if (prevCountdown <= 1) {
@@ -35,6 +38,8 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
       });
     }, 1000);
 
+    // function này sẽ được gọi khi component unmount
+    // thực hiện việc unsubscribe listener và clear interval
     return () => {
       unsubscribe();
       clearInterval(timer);
@@ -74,7 +79,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     if (auth.currentUser) {
       try {
         const newCode = generateVerificationCode();
-        setVerificationCode(newCode);
+        setInputCode('');
         await sendVerificationCodeEmail(email, newCode);
         setCountdown(60);
       } catch (error) {
