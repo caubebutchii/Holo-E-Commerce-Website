@@ -54,7 +54,7 @@ function MyTabBar({ state, descriptors, navigation }:any) {
         } else if (route.name === 'List') {
           iconName = 'bag-outline';
         } else if (route.name === 'Wishlist') {
-          iconName = 'heart-outline';
+          iconName = 'cart-outline';
         // } else if (route.name === 'Messages') {
         //   iconName = 'chatbubble-outline';
         } else if (route.name === 'Account') {
