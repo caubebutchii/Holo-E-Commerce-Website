@@ -2,36 +2,109 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { db } from '../firebase/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { useUser } from '../context/UserContext';
 
 const CheckoutScreen = ({ navigation, route }) => {
+  // useState để lưu trạng thái của quá trình checkout
   const [checkoutStage, setCheckoutStage] = useState('cart');
+  // useState để lưu phương thức thanh toán được chọn
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('visa');
+  // useState để lưu trạng thái của việc đặt hàng
   const [orderPlaced, setOrderPlaced] = useState(false);
+  // useState để lưu đánh giá của người dùng
   const [rating, setRating] = useState(0);
+  // useState để lưu các sản phẩm trong giỏ hàng
   const [cartItems, setCartItems] = useState([]);
+  // useState để lưu các sản phẩm được chọn
+  const [selectedItems, setSelectedItems] = useState([]);
+  // useState để lưu tổng tiền
+  const [total, setTotal] = useState(0);
+  // Lấy thông tin user từ context
+  const { user } = useUser();
+
+  // useEffect để fetch dữ liệu giỏ hàng từ Firestore
+  // useEffect này sẽ chạy mỗi khi user thay đổi
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      if (user.uid !== '') {
+        // Lấy thông tin giỏ hàng từ Firestore
+        const cartRef = doc(db, 'carts', user.uid);
+        // Kiểm tra xem giỏ hàng có tồn tại không
+        const cartDoc = await getDoc(cartRef);
+        // Nếu giỏ hàng tồn tại thì lưu thông tin sản phẩm vào state
+        if (cartDoc.exists()) {
+          setCartItems(cartDoc.data().items);
+        }
+      }
+    };
+
+    fetchCartItems();
+  }, [user]);
 
   useEffect(() => {
+    // Nếu có sản phẩm được truyền vào thông qua route.params thì thêm sản phẩm đó vào giỏ hàng
     if (route.params?.product) {
+      // Lấy thông tin sản phẩm từ route.params
       const product = route.params.product;
+      // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
       setCartItems((prevItems) => {
         const existingItem = prevItems.find(item => item.id === product.id);
         if (existingItem) {
+          // Nếu sản phẩm đã tồn tại thì tăng số lượng lên 1
           return prevItems.map(item =>
             item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
           );
         } else {
+          // Nếu sản phẩm chưa tồn tại thì thêm sản phẩm vào giỏ hàng
           return [...prevItems, { ...product, quantity: 1 }];
         }
       });
     }
   }, [route.params?.product]);
 
+  // Hàm toggleSelectItem để chọn hoặc bỏ chọn sản phẩm
+  const toggleSelectItem = (item) => {
+    setSelectedItems((prevSelectedItems) => {
+      if (prevSelectedItems.includes(item.id)) {
+        // Nếu sản phẩm đã được chọn thì bỏ chọn
+        return prevSelectedItems.filter((id) => id !== item.id);
+      } else {
+        // Nếu sản phẩm chưa được chọn thì chọn
+        return [...prevSelectedItems, item.id];
+      }
+    });
+    // thực hiện tính tổng tiền mỗi khi sản phẩm được chọn hoặc bỏ chọn
+    calculateTotal();
+  };
+
+  // Hàm calculateTotal để tính tổng tiền
+  const calculateTotal = () => {
+    let total = 0;
+    // Duyệt qua các sản phẩm trong giỏ hàng
+    cartItems.forEach((item) => {
+      // Nếu sản phẩm được chọn thì cộng dồn vào tổng tiền
+      if (selectedItems.includes(item.id)) {
+        total += item.price * item.quantity;
+      }
+    });
+    setTotal(total);
+  };
+
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
+      <TouchableOpacity onPress={() => toggleSelectItem(item)}>
+        <Ionicons
+        // Nếu sản phẩm đã được chọn thì hiển thị checkbox, ngược lại hiển thị hình vuông
+          name={selectedItems.includes(item.id) ? 'checkbox' : 'square-outline'}
+          size={24}
+          color="#007AFF"
+        />
+      </TouchableOpacity>
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDescription}>{item.description}</Text>
         <Text style={styles.productPrice}>${item.price}</Text>
       </View>
       <Text style={styles.productQuantity}>x{item.quantity}</Text>
@@ -57,7 +130,7 @@ const CheckoutScreen = ({ navigation, route }) => {
               <Text style={styles.applyButtonText}>Apply</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.total}>TOTAL: $2,800</Text>
+          <Text style={styles.total}>{total}</Text>
           <TouchableOpacity
             style={styles.nextButton}
             onPress={() => setCheckoutStage('payment')}

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, Image, ScrollView, Modal, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/common/Header';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import ProductGrid from '../components/ProductGrid';
 import { app } from '../firebase/firebaseConfig';
@@ -165,26 +165,66 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   );
 
   // Hàm xử lý việc thêm vào giỏ hàng
-  const handleAddToCart = () => {
-    // Nếu user chưa đăng nhập thì chuyển huớng sang welcome
-    if (!user || !user.uid) {
+  const handleAddToCart = async () => {
+    // hàm setModalVisible để ẩn modal
+    setModalVisible(false);
+    if (user.uid == '') {
       navigation.navigate('Welcome');
       return;
     }
-    // Hiển thị modal và chuyển sang trang checkout
-    setSelectedAddOrBuy('Add to Cart');
-    setModalVisible(true);
-    navigation.navigate('Checkout', { product });
+  
+    // chỗ này sẽ thêm sản phẩm vào giỏ hàng
+    try {
+      // Lấy giỏ hàng của user bằng cách truy cập vào collection 'carts' với doc id là uid của user
+      const cartRef = doc(db, 'carts', user.uid);
+      // Lấy thông tin giỏ hàng của user từ firestore bằng hàm getDoc với tham số là cartRef vừa lấy được
+      const cartDoc = await getDoc(cartRef);
+      
+      // Nếu giỏ hàng đã tồn tại
+      if (cartDoc.exists()) {
+        // Lấy thông tin giỏ hàng
+        const cartData = cartDoc.data();
+        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
+        
+        const existingItem = cartData.items.find((item: any) => item.id === product.id);
+        // Nếu sản phẩm đã tồn tại trong giỏ hàng thì tăng số lượng lên 1
+        if (existingItem) {
+          // Cập nhật giỏ hàng với số lượng sản phẩm tăng lên 1
+          // cartRef là địa chỉ của giỏ hàng, items là mảng chứa các sản phẩm trong giỏ hàng
+          await updateDoc(cartRef, {
+            items: cartData.items.map((item: any) =>
+              // Nếu id của sản phẩm trong giỏ hàng trùng với id của sản phẩm cần thêm thì tăng số lượng lên 1
+              item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+            )
+          });
+        } else {
+          // Ngược lại thì thêm sản phẩm vào giỏ hàng với số lượng là 1
+          await updateDoc(cartRef, {
+            items: arrayUnion({ ...product, quantity: 1 })
+          });
+        }
+      } else {
+        // Nếu giỏ hàng chưa tồn tại thì tạo mới giỏ hàng với sản phẩm cần thêm vào giỏ hàng
+        await setDoc(cartRef, {
+          items: [{ ...product, quantity: 1 }]
+        });
+      }
+      
+    } catch (error) {
+      console.error("Error adding to cart: ", error);
+    }
   };
   
   const handleBuyNow = () => {
-    if (!user || !user.uid) {
+    // khi nhấn vào nút mua ngay thì ẩn modal
+    setModalVisible(false);
+    if (user.uid == '') {
       navigation.navigate('Welcome');
       return;
     }
-    setSelectedAddOrBuy('Buy Now');
-    setModalVisible(true);
-    navigation.navigate('Checkout', { product });
+    // setSelectedAddOrBuy('Buy Now');
+    // setModalVisible(true);
+    navigation.navigate('Checkout', { product, 'Buy Now' });
   };
   const renderColorOption = ({ item: [color, image] }: any) => (
     <TouchableOpacity
@@ -230,7 +270,10 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
           <Text style={styles.buttonText}>Chat</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cartButton} onPress={handleAddToCart}>
+        <TouchableOpacity style={styles.cartButton} onPress={() => {
+          setSelectedAddOrBuy('Add to Cart');
+          setModalVisible(true);
+        }}>
           <Ionicons name="cart-outline" size={24} color="#333" />
           <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
@@ -311,7 +354,12 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
               style={styles.modalActionButton}
               onPress={() => {
                 // Handle action based on selectedAddOrBuy
-                setModalVisible(false);
+                if (selectedAddOrBuy === 'Add to Cart') {
+                  handleAddToCart();
+                } else if (selectedAddOrBuy === 'Buy Now') {
+                  handleBuyNow();
+                }
+                // setModalVisible(false);
               }}
             >
               <Text style={styles.modalActionButtonText}>

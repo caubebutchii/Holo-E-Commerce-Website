@@ -4,6 +4,8 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
+// Tạo một context chứa thông tin của user
+// Ban đầu thì user sẽ là một object gồm các field giá trị ''
 const UserContext = createContext(null);
 
 // Ban đầu thì user sẽ là một object gồm các field giá trị ''
