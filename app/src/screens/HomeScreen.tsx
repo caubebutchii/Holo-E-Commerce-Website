@@ -471,7 +471,7 @@ const HomeScreen = ({ navigation }: any) => {
     navigation.navigate('ProductListing', { searchQuery, category: null, categories });
   }
   const handleFilter = () => {
-    navigation.navigate('filter');
+    navigation.navigate('Filter');
   };
   const handleSplashAdPress = () => {
       navigation.navigate('ProductListing', { category: {name:'làm đẹp'}, categories });
@@ -485,10 +485,15 @@ const HomeScreen = ({ navigation }: any) => {
       case 'header':
         return <Header title="All Deals" showCart />;
 
-      case 'search':
-        return <SearchBar placeholder="Search for product" onPressSearch={handlePressSearch}
-          onChangeText={handleSearch} onPressFilter={handleFilter}
-        />;
+        case 'search':
+          return (
+            <SearchBar
+              placeholder="Search for product"
+              onChangeText={handleSearch}
+              onPressSearch={handlePressSearch}
+              onPressFilter={handleFilter}
+            />
+          );
       case 'featuredBanner':
         return <FeaturedBanner products={featuredProducts} onPressProduct={() => handleProductPress} />;
       case 'categoryList':

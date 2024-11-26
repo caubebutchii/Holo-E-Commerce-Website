@@ -16,7 +16,7 @@ type typeCategories = {
 };
 
 const ProductListingScreen = ({ navigation, route }: any) => {
-  const { category, searchQuery } = route.params;
+  const { category, searchQuery, filters } = route.params;
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<typeCategories | null>(category || null);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -68,6 +68,21 @@ const ProductListingScreen = ({ navigation, route }: any) => {
     fetchProducts();
   }, [selectedCategory]);
 
+  useEffect(() => {//lọc theo filters
+    if (filters) {
+      const filtered = products.filter(product => {
+        const priceInRange = product.price >= filters.priceRange.min && product.price <= filters.priceRange.max;
+        const ratingMatch = product.rating >= filters.rating;
+        const categoryMatch = !filters.category || product.category === filters.category;
+        const tagsMatch = filters.tags.length === 0 || (product.tags && filters.tags.some((tag: any) => product.tags.includes(tag)));
+        const colorsMatch = filters.colors.length === 0 || (product.colors && filters.colors.some((color: any) => product.colors.includes(color)));
+
+        return priceInRange && ratingMatch && categoryMatch && tagsMatch && colorsMatch;
+      });
+
+      setFilteredProducts(filtered);
+    }
+  }, [filters, products]);
   const handleCategoryPress = (category: any) => {
     setCurrentSearchQuery('')
     setSelectedCategory(category);
@@ -109,7 +124,7 @@ const ProductListingScreen = ({ navigation, route }: any) => {
     filterProducts(products, currentSearchQuery);
   }
   const handleFilter = () => {
-    navigation.navigate('filter');
+    navigation.navigate('Filter');
   };
 
   // Render item function for FlatList
@@ -123,7 +138,15 @@ const ProductListingScreen = ({ navigation, route }: any) => {
             selectedCategory ? selectedCategory.name : "Tất cả sản phẩm"
           } showCart />;
       case 'search':
-        return <SearchBar placeholder="Tìm kiếm sản phẩm" onChangeText={handleSearch} onPressSearch={handlePressSearch} onPressFilter={handleFilter} />;
+        return(
+          <SearchBar
+              placeholder="Search for product"
+              onChangeText={handleSearch}
+              onPressSearch={handlePressSearch}
+              onPressFilter={handleFilter}
+            />
+        );
+
       case 'categoryList':
         return <CategoryList categories={categoryList} onCategoryPress={handleCategoryPress} scroll />;
       case 'productGrid':
@@ -144,19 +167,19 @@ const ProductListingScreen = ({ navigation, route }: any) => {
   ];
 
   return (
-    <View style = {styles.container}>
+    <View style={styles.container}>
       {loading ? (
         <SkeletonLoader />
-      ) :(
-          <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
-            <FlatList
-              data={data}
-              renderItem={renderItem}
-              showsVerticalScrollIndicator={false}
-              keyExtractor={(item, index) => index.toString()} // Sử dụng index làm key
-            />
-          </LinearGradient>
-        )}
+      ) : (
+        <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
+          <FlatList
+            data={data}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={(item, index) => index.toString()} // Sử dụng index làm key
+          />
+        </LinearGradient>
+      )}
     </View>
   );
 };

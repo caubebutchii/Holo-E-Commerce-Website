@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: any) => {
+interface SearchBarProps {
+  placeholder: string;
+  onChangeText: (text: string) => void;
+  onPressSearch: () => void;
+  onPressFilter: () => void;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ placeholder, onChangeText, onPressSearch, onPressFilter }) => {
+  const [searchText, setSearchText] = useState('');
+
+  const handleChangeText = (text: string) => {
+    setSearchText(text);
+    onChangeText(text);
+  };
+
   return (
     <LinearGradient
       colors={['#66FFCC', '#99FFEE']}
@@ -15,9 +29,15 @@ const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: 
           <TextInput
             style={styles.input}
             placeholder={placeholder}
-            onChangeText={onChangeText}
+            onChangeText={handleChangeText}
+            value={searchText}
             placeholderTextColor="#999"
           />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={onPressSearch} style={styles.searchButton}>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity onPress={onPressFilter} style={styles.filterButton}>
           <Ionicons name="options-outline" size={20} color="#999" />
@@ -30,15 +50,14 @@ const SearchBar = ({ placeholder, onChangeText, onPressSearch, onPressFilter }: 
 const styles = StyleSheet.create({
   gradient: {
     paddingBottom: 26,
-    borderBottomLeftRadius:20,
-    borderBottomRightRadius:20
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     gap: 12,
-   
   },
   searchContainer: {
     flex: 1,
@@ -47,13 +66,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 4,
     gap: 8,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: '#333',
+  },
+  searchButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 8,
   },
   filterButton: {
     padding: 8,
