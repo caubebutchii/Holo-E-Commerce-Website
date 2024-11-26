@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   section: {
     marginVertical: 10,
   },
-  sectionHeader: {
+  sectionHeader: {  
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
