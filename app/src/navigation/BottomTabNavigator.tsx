@@ -15,9 +15,14 @@ const Tab = createBottomTabNavigator();
 const handleTabPress = (route, isFocused, navigation) => {
   const auth = getAuth(app);
   const user = auth.currentUser;
-  if (route.name === 'Account' && !user) {
-    navigation.navigate('Welcome', { returnTo: { screen: 'Account' } });
-  } else if (!isFocused) {
+  // Nếu user chưa đăng nhập và muốn vào thì chuyển về welcome screen
+  // if (route.name === 'Account' && !user) {
+  //   navigation.navigate('Welcome', { returnTo: { screen: 'Account' } });
+  // } else if (!isFocused) {
+  //   // Nếu user đã đăng nhập hoặc không phải vào account thì chuyển screen
+  //   navigation.navigate(route.name);
+  // }
+  if (!isFocused) {
     navigation.navigate(route.name);
   }
 };

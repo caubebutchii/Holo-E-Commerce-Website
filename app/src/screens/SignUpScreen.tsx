@@ -33,27 +33,33 @@ const SignUpScreen = ({ navigation }: any) => {
     if (password === '') newErrors.password = 'Password không được để trống';
     setErrors(newErrors);
 
+    // Nếu không có lỗi nào thì tiến hành đăng ký
     if (Object.keys(newErrors).length === 0) {
       try {
+        // Lấy auth từ app
         const auth = getAuth(app);
+        // Tạo tài khoản mới từ email và password
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Lấy thông tin user
         const user = userCredential.user;
 
-        // Generate verification code
+        // Gửi mã xác thực qua email, tạo mã xác thực mới bằng hàm generateVerificationCode
         const code = generateVerificationCode();
+        // Lưu mã xác thực vào state
         setVerificationCode(code);
+        // Gửi email xác thực
         await sendVerificationCodeEmail(email, code);
 
-        // Save user information to Firestore
-        const userData = {
-          id: user.uid,
-          name: name,
-          email: user.email,
-          phone: '',
-        };
-        const db = getFirestore(app);
-        await setDoc(doc(db, 'users', user.uid), userData);
-        setUser(userData); // Update user context
+        // // Save user information to Firestore
+        // const userData = {
+        //   id: user.uid,
+        //   name: name,
+        //   email: user.email,
+        //   phone: '',
+        // };
+        // const db = getFirestore(app);
+        // await setDoc(doc(db, 'users', user.uid), userData);
+        // setUser(userData); // Update user context
 
         navigation.navigate('VerificationWaiting', { email, code, name });
       } catch (error) {

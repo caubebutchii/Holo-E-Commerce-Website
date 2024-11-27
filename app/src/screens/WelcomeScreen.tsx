@@ -15,9 +15,11 @@ import { useUser } from '../context/UserContext';
 const { width, height } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }: any) => {
+  // Lấy setUser từ context
   const { setUser } = useUser();
 
   useEffect(() => {
+    // Kiểm tra xem người dùng đã đăng nhập chưa
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
