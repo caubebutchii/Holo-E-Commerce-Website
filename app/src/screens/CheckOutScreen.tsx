@@ -7,7 +7,7 @@ import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
 import { useFocusEffect } from '@react-navigation/native';
 
-const CheckoutScreen = ({ navigation, route }:any) => {
+const CheckoutScreen = ({ navigation, route }: any) => {
   const [checkoutStage, setCheckoutStage] = useState('cart');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('visa');
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -18,37 +18,28 @@ const CheckoutScreen = ({ navigation, route }:any) => {
   const { user } = useUser();
   const [text, setText] = useState('');
 
-  // Hàm lấy thông tin giỏ hàng từ firestore
   const fetchCartItems = useCallback(async () => {
     console.log('Fetching cart items for user:', user?.uid);
-    // Nếu user đã đăng nhập
     if (user?.uid) {
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
 
-      // Nếu giỏ hàng đã tồn tại
       if (cartDoc.exists()) {
-        // Lấy danh sách sản phẩm từ giỏ hàng, nếu không có thì trả về mảng rỗng
         const items = cartDoc.data().items || [];
         setCartItems(items);
         setText('');
-        // Tính tổng tiền
         calculateTotal(items);
       } else {
-        // Nếu giỏ hàng không tồn tại thì tạo giỏ hàng mới
         await setDoc(cartRef, { items: [] });
-        // Hiển thị thông báo
         setText('Giỏ hàng trống. Đã tạo giỏ hàng mới cho bạn.');
         setCartItems([]);
       }
     } else {
-      // Nếu user chưa đăng nhập thì hiển thị thông báo
       setText('Vui lòng đăng nhập để xem giỏ hàng.');
       setCartItems([]);
     }
   }, [user]);
 
-  // Hàm tính tổng tiền của các sản phẩm được chọn
   const calculateTotal = useCallback((items) => {
     if (!Array.isArray(items) || items.length === 0) {
       setTotal(0);
@@ -57,7 +48,6 @@ const CheckoutScreen = ({ navigation, route }:any) => {
 
     let totalAmount = 0;
     items.forEach((item) => {
-      // kiểm tra xem sản phẩm có trong danh sách được chọn không
       if (selectedItems.includes(item.id)) {
         totalAmount += item.price * item.quantity;
       }
@@ -66,19 +56,15 @@ const CheckoutScreen = ({ navigation, route }:any) => {
   }, [selectedItems]);
 
   useFocusEffect(
-    // thực hiện fetch mỗi khi fetchCartItems thay đổi
-
     useCallback(() => {
       fetchCartItems();
     }, [fetchCartItems])
   );
 
-  // Hàm thêm sản phâm vào giỏ hàng (từ buy now)
   useEffect(() => {
-    // kiểm tra nếu có tham số buyNow thì thực hiện thêm sản phẩm vào giỏ hàng
     if (route.params?.buyNow) {
-      const { product, color, size, quantity } = route.params;
-      addBuyNowItemToCart(product, color, size, quantity);
+      const { product } = route.params;
+      addBuyNowItemToCart(product);
     }
   }, []);
 
@@ -86,7 +72,7 @@ const CheckoutScreen = ({ navigation, route }:any) => {
     calculateTotal(cartItems);
   }, [selectedItems, cartItems, calculateTotal]);
 
-  const addBuyNowItemToCart = async (product, color, size, quantity) => {
+  const addBuyNowItemToCart = async (product) => {
     if (!user?.uid) {
       Alert.alert('Error', 'Please log in to add items to cart');
       return;
@@ -95,7 +81,7 @@ const CheckoutScreen = ({ navigation, route }:any) => {
     try {
       const cartRef = doc(db, 'carts', user.uid);
       await updateDoc(cartRef, {
-        items: arrayUnion({ ...product, quantity, color, size })
+        items: arrayUnion(product)
       });
       fetchCartItems();
     } catch (error) {
@@ -122,7 +108,6 @@ const CheckoutScreen = ({ navigation, route }:any) => {
     <View style={styles.cartItem}>
       <TouchableOpacity onPress={() => toggleSelectItem(item)}>
         <Ionicons
-        // Nếu sản phẩm đã được chọn thì hiển thị checkbox, ngược lại hiển thị hình vuông
           name={selectedItems.includes(item.id) ? 'checkbox' : 'square-outline'}
           size={24}
           color="#007AFF"
@@ -130,10 +115,17 @@ const CheckoutScreen = ({ navigation, route }:any) => {
       </TouchableOpacity>
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>${item.price}</Text>
+        <Text style={styles.productName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
+        <Text style={styles.productVariant}>
+          {item.color && `Màu ${item.color}`}
+          {item.color && item.size && ' - '}
+          {item.size && `Size ${item.size}`}
+        </Text>
+        <View style={styles.priceQuantityContainer}>
+          <Text style={styles.productPrice}>₫{item.price.toLocaleString()}</Text>
+          <Text style={styles.productQuantity}>x{item.quantity}</Text>
+        </View>
       </View>
-      <Text style={styles.productQuantity}>x{item.quantity}</Text>
     </View>
   );
 
@@ -158,7 +150,7 @@ const CheckoutScreen = ({ navigation, route }:any) => {
             </TouchableOpacity>
           </View>
           <Text style={styles.total}>{text}</Text>
-          <Text style={styles.total}>{total}</Text>
+          <Text style={styles.total}>Total: ₫{total.toLocaleString()}</Text>
           <TouchableOpacity
             style={styles.nextButton}
             onPress={() => setCheckoutStage('payment')}
@@ -195,7 +187,7 @@ const CheckoutScreen = ({ navigation, route }:any) => {
       ListHeaderComponent={() => (
         <>
           <Text style={styles.sectionTitle}>Payment</Text>
-          <Text style={styles.total}>TOTAL: $3,080</Text>
+          <Text style={styles.total}>TOTAL: ₫{total.toLocaleString()}</Text>
           {renderPaymentMethod('visa', 'https://example.com/visa-logo.png', '2334')}
           {renderPaymentMethod('mastercard', 'https://example.com/mastercard-logo.png', '3774')}
           {renderPaymentMethod('paypal', 'https://example.com/paypal-logo.png', 'abc@gmail.com')}
@@ -229,15 +221,15 @@ const CheckoutScreen = ({ navigation, route }:any) => {
           <Text style={styles.confirmationDescription}>Commodo eu ut sunt qui minim fugiat elit nisi enim</Text>
           <View style={styles.orderSummary}>
             <Text>Subtotal</Text>
-            <Text>$2,800</Text>
+            <Text>₫{total.toLocaleString()}</Text>
           </View>
           <View style={styles.orderSummary}>
             <Text>Tax (10%)</Text>
-            <Text>$280</Text>
+            <Text>₫{(total * 0.1).toLocaleString()}</Text>
           </View>
           <View style={styles.orderSummary}>
             <Text>Fees</Text>
-            <Text>$0</Text>
+            <Text>₫0</Text>
           </View>
           <View style={styles.orderSummary}>
             <Text>Card</Text>
@@ -245,7 +237,7 @@ const CheckoutScreen = ({ navigation, route }:any) => {
           </View>
           <View style={styles.orderSummary}>
             <Text style={styles.totalText}>Total</Text>
-            <Text style={styles.totalAmount}>$3,080</Text>
+            <Text style={styles.totalAmount}>₫{(total * 1.1).toLocaleString()}</Text>
           </View>
           <Text style={styles.ratingPrompt}>How was your experience?</Text>
           <View style={styles.ratingContainer}>
@@ -318,30 +310,36 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
+    marginRight: 12,
   },
   productInfo: {
     flex: 1,
-    marginLeft: 16,
+    justifyContent: 'space-between',
   },
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 4,
   },
-  productDescription: {
+  productVariant: {
     fontSize: 14,
-    color: 'gray',
+    color: '#666',
+    marginBottom: 4,
+  },
+  priceQuantityContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 4,
     color: '#007AFF',
   },
   productQuantity: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 14,
+    color: '#666',
   },
   voucherContainer: {
     flexDirection: 'row',
@@ -484,3 +482,4 @@ const styles = StyleSheet.create({
 });
 
 export default CheckoutScreen;
+

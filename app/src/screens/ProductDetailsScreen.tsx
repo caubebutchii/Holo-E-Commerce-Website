@@ -43,87 +43,86 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   }, [])
 
   const handleAddToCart = async () => {
-    // nếu user không tồn tại thì chuyển về welcome screen
     if (!user.uid) {
-      navigation.navigate('Welcome');
+      Alert.alert('Thông báo', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
       return;
     }
 
     try {
-      // lấy giỏ hàng của user
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
 
-      // tạo item mới, thông tin item bao gồm id, name, price, image, color, size, quantity
-      // lấy từ product và state selectedColor, selectedSize
       const newItem = {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.colorImages[selectedColor] || product.image,
         color: selectedColor,
         size: selectedSize,
         quantity: 1
       };
 
-      // nếu giỏ hàng đã tồn tại
       if (cartDoc.exists()) {
-        // lấy thông tin giỏ hàng
         const cartData = cartDoc.data();
-        // tìm xem item đã tồn tại trong giỏ hàng chưa
-        // kiểm tra các trường id, color, size
         const existingItemIndex = cartData.items.findIndex((item: any) => 
           item.id === product.id && item.color === selectedColor && item.size === selectedSize
         );
 
         if (existingItemIndex !== -1) {
-          // nếu item đã tồn tại thì tăng số lượng lên 1
           cartData.items[existingItemIndex].quantity += 1;
           await updateDoc(cartRef, { items: cartData.items });
         } else {
-          // nếu item chưa tồn tại thì thêm item mới vào giỏ hàng
           await updateDoc(cartRef, {
             items: arrayUnion(newItem)
           });
         }
       } else {
-        // nếu giỏ hàng chưa tồn tại thì tạo giỏ hàng mới
-        // với item là mảng chứa item mới
         await setDoc(cartRef, {
           items: [newItem]
         });
       }
-      // hiển thị thông báo thành công và đóng modal
-      Alert.alert('Success', 'Product added to cart successfully');
+
+      Alert.alert('Thành công', 'Sản phẩm đã được thêm vào giỏ hàng');
       setModalVisible(false);
     } catch (error) {
       console.error("Error adding to cart: ", error);
-      Alert.alert('Error', 'Failed to add product to cart');
+      Alert.alert('Lỗi', 'Không thể thêm sản phẩm vào giỏ hàng');
     }
   };
 
-  const handleBuyNow = () => {
-    if (user.uid === '') {
-      navigation.navigate('Welcome');
+  const handleBuyNow = async () => {
+    if (!user.uid) {
+      Alert.alert('Thông báo', 'Vui lòng đăng nhập để mua hàng.');
       return;
     }
-    // default color là màu đầu tiên trong mảng colors của product
+
     const defaultColor = product.colors && product.colors.length > 0 ? product.colors[0] : null;
-    // default size là size đầu tiên trong mảng sizes của product
     const defaultSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : null;
-    // chuyển sang checkout screen với thông tin sản phẩm, màu, size, số lượng, buyNow = true
-    navigation.navigate('Checkout', { 
-      product: {
+
+    try {
+      const cartRef = doc(db, 'carts', user.uid);
+      const newItem = {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
-      }, 
-      color: defaultColor, 
-      size: defaultSize, 
-      quantity: 1, 
-      buyNow: true
-    });
+        image: product.colorImages[defaultColor] || product.image,
+        color: defaultColor,
+        size: defaultSize,
+        quantity: 1
+      };
+
+      await updateDoc(cartRef, {
+        items: arrayUnion(newItem)
+      });
+
+      navigation.navigate('Checkout', { 
+        product: newItem,
+        buyNow: true
+      });
+    } catch (error) {
+      console.error("Error adding item for buy now: ", error);
+      Alert.alert('Lỗi', 'Không thể thực hiện mua ngay');
+    }
   };
 
   const handleBackPress = () => {
