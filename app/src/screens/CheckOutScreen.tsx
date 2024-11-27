@@ -1,103 +1,124 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, FlatList } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, TextInput, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../firebase/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
+import { useFocusEffect } from '@react-navigation/native';
 
-const CheckoutScreen = ({ navigation, route }) => {
-  // useState để lưu trạng thái của quá trình checkout
+const CheckoutScreen = ({ navigation, route }:any) => {
   const [checkoutStage, setCheckoutStage] = useState('cart');
-  // useState để lưu phương thức thanh toán được chọn
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('visa');
-  // useState để lưu trạng thái của việc đặt hàng
   const [orderPlaced, setOrderPlaced] = useState(false);
-  // useState để lưu đánh giá của người dùng
   const [rating, setRating] = useState(0);
-  // useState để lưu các sản phẩm trong giỏ hàng
   const [cartItems, setCartItems] = useState([]);
-  // useState để lưu các sản phẩm được chọn
   const [selectedItems, setSelectedItems] = useState([]);
-  // useState để lưu tổng tiền
   const [total, setTotal] = useState(0);
-  // Lấy thông tin user từ context
   const { user } = useUser();
+  const [text, setText] = useState('');
 
-  // useEffect để fetch dữ liệu giỏ hàng từ Firestore
-  // useEffect này sẽ chạy mỗi khi user thay đổi
-  useEffect(() => {
-    const fetchCartItems = async () => {
-      if (user.uid !== '') {
-        // Lấy thông tin giỏ hàng từ Firestore
-        const cartRef = doc(db, 'carts', user.uid);
-        // Kiểm tra xem giỏ hàng có tồn tại không
-        const cartDoc = await getDoc(cartRef);
-        // Nếu giỏ hàng tồn tại thì lưu thông tin sản phẩm vào state
-        if (cartDoc.exists()) {
-          setCartItems(cartDoc.data().items);
-        }
-      }
-      else
-      {
-        // Nếu không có user đăng nhập thì set giỏ hàng rỗng
+  // Hàm lấy thông tin giỏ hàng từ firestore
+  const fetchCartItems = useCallback(async () => {
+    console.log('Fetching cart items for user:', user?.uid);
+    // Nếu user đã đăng nhập
+    if (user?.uid) {
+      const cartRef = doc(db, 'carts', user.uid);
+      const cartDoc = await getDoc(cartRef);
+
+      // Nếu giỏ hàng đã tồn tại
+      if (cartDoc.exists()) {
+        // Lấy danh sách sản phẩm từ giỏ hàng, nếu không có thì trả về mảng rỗng
+        const items = cartDoc.data().items || [];
+        setCartItems(items);
+        setText('');
+        // Tính tổng tiền
+        calculateTotal(items);
+      } else {
+        // Nếu giỏ hàng không tồn tại thì tạo giỏ hàng mới
+        await setDoc(cartRef, { items: [] });
+        // Hiển thị thông báo
+        setText('Giỏ hàng trống. Đã tạo giỏ hàng mới cho bạn.');
         setCartItems([]);
       }
-    };
-
-    fetchCartItems();
+    } else {
+      // Nếu user chưa đăng nhập thì hiển thị thông báo
+      setText('Vui lòng đăng nhập để xem giỏ hàng.');
+      setCartItems([]);
+    }
   }, [user]);
 
+  // Hàm tính tổng tiền của các sản phẩm được chọn
+  const calculateTotal = useCallback((items) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      setTotal(0);
+      return;
+    }
+
+    let totalAmount = 0;
+    items.forEach((item) => {
+      // kiểm tra xem sản phẩm có trong danh sách được chọn không
+      if (selectedItems.includes(item.id)) {
+        totalAmount += item.price * item.quantity;
+      }
+    });
+    setTotal(totalAmount);
+  }, [selectedItems]);
+
+  useFocusEffect(
+    // thực hiện fetch mỗi khi fetchCartItems thay đổi
+
+    useCallback(() => {
+      fetchCartItems();
+    }, [fetchCartItems])
+  );
+
+  // Hàm thêm sản phâm vào giỏ hàng (từ buy now)
   useEffect(() => {
-    // Nếu có sản phẩm được truyền vào thông qua route.params thì thêm sản phẩm đó vào giỏ hàng
-    if (route.params?.product) {
-      // Lấy thông tin sản phẩm từ route.params
-      const product = route.params.product;
-      // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
-      setCartItems((prevItems) => {
-        const existingItem = prevItems.find(item => item.id === product.id);
-        if (existingItem) {
-          // Nếu sản phẩm đã tồn tại thì tăng số lượng lên 1
-          return prevItems.map(item =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-          );
+    // kiểm tra nếu có tham số buyNow thì thực hiện thêm sản phẩm vào giỏ hàng
+    if (route.params?.buyNow) {
+      const { product, color, size, quantity } = route.params;
+      addBuyNowItemToCart(product, color, size, quantity);
+    }
+  }, []);
+
+  useEffect(() => {
+    calculateTotal(cartItems);
+  }, [selectedItems, cartItems, calculateTotal]);
+
+  const addBuyNowItemToCart = async (product, color, size, quantity) => {
+    if (!user?.uid) {
+      Alert.alert('Error', 'Please log in to add items to cart');
+      return;
+    }
+
+    try {
+      const cartRef = doc(db, 'carts', user.uid);
+      await updateDoc(cartRef, {
+        items: arrayUnion({ ...product, quantity, color, size })
+      });
+      fetchCartItems();
+    } catch (error) {
+      console.error("Error adding buy now item to cart: ", error);
+      Alert.alert('Error', 'Failed to add item to cart');
+    }
+  };
+
+  const toggleSelectItem = (item) => {
+    if (item && item.id) {
+      setSelectedItems((prevSelectedItems) => {
+        if (prevSelectedItems.includes(item.id)) {
+          return prevSelectedItems.filter((id) => id !== item.id);
         } else {
-          // Nếu sản phẩm chưa tồn tại thì thêm sản phẩm vào giỏ hàng
-          return [...prevItems, { ...product, quantity: 1 }];
+          return [...prevSelectedItems, item.id];
         }
       });
+    } else {
+      console.error('Invalid item or item.id is null:', item);
     }
-  }, [route.params?.product]);
-
-  // Hàm toggleSelectItem để chọn hoặc bỏ chọn sản phẩm
-  const toggleSelectItem = (item) => {
-    setSelectedItems((prevSelectedItems) => {
-      if (prevSelectedItems.includes(item.id)) {
-        // Nếu sản phẩm đã được chọn thì bỏ chọn
-        return prevSelectedItems.filter((id) => id !== item.id);
-      } else {
-        // Nếu sản phẩm chưa được chọn thì chọn
-        return [...prevSelectedItems, item.id];
-      }
-    });
-    // thực hiện tính tổng tiền mỗi khi sản phẩm được chọn hoặc bỏ chọn
-    calculateTotal();
   };
 
-  // Hàm calculateTotal để tính tổng tiền
-  const calculateTotal = () => {
-    let total = 0;
-    // Duyệt qua các sản phẩm trong giỏ hàng
-    cartItems.forEach((item) => {
-      // Nếu sản phẩm được chọn thì cộng dồn vào tổng tiền
-      if (selectedItems.includes(item.id)) {
-        total += item.price * item.quantity;
-      }
-    });
-    setTotal(total);
-  };
-
-  const renderCartItem = ({ item }) => (
+  const renderCartItem = ({ item }: any) => (
     <View style={styles.cartItem}>
       <TouchableOpacity onPress={() => toggleSelectItem(item)}>
         <Ionicons
@@ -124,6 +145,7 @@ const CheckoutScreen = ({ navigation, route }) => {
       ListHeaderComponent={() => (
         <Text style={styles.sectionTitle}>Checkout</Text>
       )}
+      
       ListFooterComponent={() => (
         <>
           <View style={styles.voucherContainer}>
@@ -135,6 +157,7 @@ const CheckoutScreen = ({ navigation, route }) => {
               <Text style={styles.applyButtonText}>Apply</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.total}>{text}</Text>
           <Text style={styles.total}>{total}</Text>
           <TouchableOpacity
             style={styles.nextButton}

@@ -23,6 +23,31 @@ const SignInScreen = ({ navigation }: any) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  // const handleSignIn = async () => {
+  //   const newErrors = {};
+  //   if (email === '') newErrors.email = 'Email không được để trống';
+  //   if (password === '') newErrors.password = 'Password không được để trống';
+  //   setErrors(newErrors);
+   
+  //   if (Object.keys(newErrors).length === 0) {
+  //   try {
+  //     const auth = getAuth(app);
+  //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  //     const user = userCredential.user;
+
+  //     // Fetch user information from Firestore
+  //     const db = getFirestore(app);
+  //     const userDoc = await getDoc(doc(db, 'users', user.uid));
+  //     if (userDoc.exists()) {
+  //       setUser(userDoc.data()); // Update user context
+  //     }
+
+  //     navigation.navigate('Main');
+  //   } catch (error) {
+  //     Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
+  //   }}
+  // };
+
   const handleSignIn = async () => {
     const newErrors = {};
     if (email === '') newErrors.email = 'Email không được để trống';
@@ -30,22 +55,33 @@ const SignInScreen = ({ navigation }: any) => {
     setErrors(newErrors);
    
     if (Object.keys(newErrors).length === 0) {
-    try {
-      const auth = getAuth(app);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      try {
+        const auth = getAuth(app);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-      // Fetch user information from Firestore
-      const db = getFirestore(app);
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        setUser(userDoc.data()); // Update user context
+        // Fetch user information from Firestore
+        const db = getFirestore(app);
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUser({
+            uid: user.uid,
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: userData.phone || ''
+          });
+          console.log('User data set in context:', userData);
+        } else {
+          console.log('No user document found in Firestore');
+        }
+
+        navigation.navigate('Main');
+      } catch (error) {
+        console.error('Sign in error:', error);
+        Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
       }
-
-      navigation.navigate('Main');
-    } catch (error) {
-      Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
-    }}
+    }
   };
 
   const handleGoogleSignIn = async () => {
