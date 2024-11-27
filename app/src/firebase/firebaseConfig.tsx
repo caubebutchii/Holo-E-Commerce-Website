@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+
 // Cấu hình Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBrLzdXDU03rwIWBu7hb232ClRzlXLG5qU",

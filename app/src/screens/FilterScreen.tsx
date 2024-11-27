@@ -1,90 +1,169 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
-const FilterScreen = ({navigation}:any) => {
-  const [shippingOptions, setShippingOptions] = useState({
-    instant: false,
-    express: false,
-    standard: false,
-  });
-  const [priceRange, setPriceRange] = useState({ min: '10', max: '1000' });
-  const [averageReview, setAverageReview] = useState(4);
+const FilterScreen = ({ navigation, route }: any) => {
+  const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [rating, setRating] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ id: string;[key: string]: any }[]>([]);
+  const [products, setProducts] = useState<{ id: string;[key: string]: any }[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([]);
 
-  const toggleShippingOption = (option: keyof typeof shippingOptions) => {
-    setShippingOptions(prev => ({ ...prev, [option]: !prev[option] }));
+  useEffect(() => {
+    const fetchDataCate = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'categories'));
+        const fetchedItems: { id: string;[key: string]: any }[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedItems.push({ id: doc.id, ...doc.data() });
+        });
+        setCategories(fetchedItems);
+      } catch (error) {
+        console.error('Error getting documents: ', error);
+      }
+    };
+    const fetchDataItems = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'items'));
+        const fetchedItems: { id: string; [key: string]: any }[] = [];
+        const fetchedTags = new Set<string>();
+        const fetchedColors = new Set<string>();
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data) {
+            if (data.tags) {
+              data.tags.forEach((tag: string) => fetchedTags.add(tag));
+            }
+            if (data.colors) {
+              data.colors.forEach((color: string) => fetchedColors.add(color));
+            }
+            fetchedItems.push({ id: doc.id, ...data });
+          }
+        });
+        setProducts(fetchedItems);
+        setTags(Array.from(fetchedTags));
+        setColors(Array.from(fetchedColors));
+      } catch (error) {
+        console.error('Error getting documents: ', error);
+      }
+    };
+    fetchDataCate();
+    fetchDataItems();
+
+    return () => {
+      setCategories([]);
+      setProducts([]);
+    };
+  }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
   };
 
+  const handlePriceChange = (index: number, value: string) => {
+    const numValue = parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+    setPriceRange(prev => {
+      const newRange = [...prev];
+      newRange[index] = numValue;
+      return newRange;
+    });
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors(prev =>
+      prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]
+    );
+  };
+
+  const applyFilters = () => {
+    const filters = {
+      priceRange: {
+        min: Math.min(...priceRange),
+        max: Math.max(...priceRange),
+      },
+      rating,
+      category: selectedCategory,
+      tags: selectedTags,
+      colors: selectedColors,
+    };
+
+    navigation.navigate('ProductListing', { filters });
+  };
+
+  const CustomMarker = () => (
+    <View style={styles.markerContainer}>
+      <View style={styles.marker} />
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Filter</Text>
-        <TouchableOpacity onPress={()=>navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="close" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Shipping options</Text>
-        <TouchableOpacity style={styles.optionRow} onPress={() => toggleShippingOption('instant')}>
-          <Ionicons
-            name={shippingOptions.instant ? 'checkbox' : 'square-outline'}
-            size={24}
-            color="#007AFF"
-          />
-          <Text style={styles.optionText}>Instant (2 hours delivery)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionRow} onPress={() => toggleShippingOption('express')}>
-          <Ionicons
-            name={shippingOptions.express ? 'checkbox' : 'square-outline'}
-            size={24}
-            color="#007AFF"
-          />
-          <Text style={styles.optionText}>Express (2 days delivery)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionRow} onPress={() => toggleShippingOption('standard')}>
-          <Ionicons
-            name={shippingOptions.standard ? 'checkbox' : 'square-outline'}
-            size={24}
-            color="#007AFF"
-          />
-          <Text style={styles.optionText}>Standard (7-10 days delivery)</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Price range</Text>
-        <View style={styles.priceInputContainer}>
+        <View style={styles.priceRangeContainer}>
           <TextInput
             style={styles.priceInput}
-            value={priceRange.min}
-            onChangeText={(text) => setPriceRange(prev => ({ ...prev, min: text }))}
+            value={formatPrice(priceRange[0])}
+            onChangeText={(text) => handlePriceChange(0, text)}
             keyboardType="numeric"
           />
+          <Text style={styles.priceSeparator}>-</Text>
           <TextInput
             style={styles.priceInput}
-            value={priceRange.max}
-            onChangeText={(text) => setPriceRange(prev => ({ ...prev, max: text }))}
+            value={formatPrice(priceRange[1])}
+            onChangeText={(text) => handlePriceChange(1, text)}
             keyboardType="numeric"
           />
         </View>
-        <View style={styles.slider}>
-          <View style={styles.sliderTrack} />
-          <View style={styles.sliderFill} />
-          <View style={[styles.sliderThumb, { left: '0%' }]} />
-          <View style={[styles.sliderThumb, { right: '0%' }]} />
+        <View style={styles.sliderContainer}>
+          <MultiSlider
+            values={[priceRange[0], priceRange[1]]}
+            min={0}
+            max={20000000}
+            step={100000}
+            sliderLength={280}
+            onValuesChange={setPriceRange}
+            selectedStyle={styles.selectedTrack}
+            unselectedStyle={styles.unselectedTrack}
+            containerStyle={styles.sliderContainerStyle}
+            trackStyle={styles.track}
+            customMarker={CustomMarker}
+          />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Average review</Text>
+        <Text style={styles.sectionTitle}>Rating</Text>
         <View style={styles.ratingContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity key={star} onPress={() => setAverageReview(star)}>
+            <TouchableOpacity key={star} onPress={() => setRating(star)}>
               <Ionicons
-                name={star <= averageReview ? 'star' : 'star-outline'}
+                name={star <= rating ? 'star' : 'star-outline'}
                 size={32}
-                color={star <= averageReview ? '#FFD700' : '#C0C0C0'}
+                color={star <= rating ? '#FFD700' : '#C0C0C0'}
               />
             </TouchableOpacity>
           ))}
@@ -93,27 +172,72 @@ const FilterScreen = ({navigation}:any) => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Others</Text>
-        <View style={styles.otherOptionsContainer}>
-          <TouchableOpacity style={styles.otherOption}>
-            <Ionicons name="refresh" size={24} color="#007AFF" />
-            <Text style={styles.otherOptionText}>30-day Free Return</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.otherOption}>
-            <Ionicons name="shield-checkmark" size={24} color="#000" />
-            <Text style={styles.otherOptionText}>Buyer Protection</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.otherOption}>
-            <Ionicons name="pricetag" size={24} color="#000" />
-            <Text style={styles.otherOptionText}>Best Deal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.otherOption}>
-            <Ionicons name="location" size={24} color="#000" />
-            <Text style={styles.otherOptionText}>Ship to store</Text>
-          </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Category</Text>
+        <View style={styles.optionsContainer}>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.optionButton,
+                selectedCategory === category.name && styles.selectedOption
+              ]}
+              onPress={() => setSelectedCategory(category.name)}
+            >
+              <Text style={[
+                styles.optionText,
+                selectedCategory === category.name && styles.selectedOptionText
+              ]}>{category.name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
-    </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tags</Text>
+        <View style={styles.optionsContainer}>
+          {tags.map((tag, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionButton,
+                selectedTags.includes(tag) && styles.selectedOption
+              ]}
+              onPress={() => toggleTag(tag)}
+            >
+              <Text style={[
+                styles.optionText,
+                selectedTags.includes(tag) && styles.selectedOptionText
+              ]}>{tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Colors</Text>
+        <View style={styles.optionsContainer}>
+          {colors.map((color, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionButton,
+                selectedColors.includes(color) && styles.selectedOption
+              ]}
+              onPress={() => toggleColor(color)}
+            >
+              <Text style={[
+                styles.optionText,
+                selectedColors.includes(color) && styles.selectedOptionText
+              ]}>{color}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+        <Text style={styles.applyButtonText}>Apply Filters</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -141,54 +265,62 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
   },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  optionText: {
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  priceInputContainer: {
+  priceRangeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   priceInput: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 8,
-    width: '48%',
+    width: '45%',
+    fontSize: 14,
   },
-  slider: {
-    height: 40,
-    position: 'relative',
+  priceSeparator: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  sliderTrack: {
+  sliderContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  sliderContainerStyle: {
+    height: 50,
+  },
+  track: {
     height: 4,
-    backgroundColor: '#e0e0e0',
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 18,
+    borderRadius: 2,
   },
-  sliderFill: {
-    height: 4,
-    backgroundColor: '#007AFF',
-    position: 'absolute',
-    left: '0%',
-    right: '0%',
-    top: 18,
+  selectedTrack: {
+    backgroundColor: '#99FFEE',
   },
-  sliderThumb: {
-    width: 20,
-    height: 20,
-    borderRadius:  10,
-    backgroundColor: '#007AFF',
-    position: 'absolute',
-    top: 10,
+  unselectedTrack: {
+    backgroundColor: '#E0E0E0',
+  },
+  markerContainer: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  marker: {
+    width: 12,
+    height: 12,
+    backgroundColor: '#99FFEE',
+    borderRadius: 6,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -198,23 +330,37 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
   },
-  otherOptionsContainer: {
+  optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
-  otherOption: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
+  optionButton: {
     backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 8,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
   },
-  otherOptionText: {
-    marginLeft: 8,
-    fontSize: 14,
+  selectedOption: {
+    backgroundColor: '#007AFF',
+  },
+  optionText: {
+    color: '#000',
+  },
+  selectedOptionText: {
+    color: '#fff',
+  },
+  applyButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  applyButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

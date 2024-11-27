@@ -471,7 +471,7 @@ const HomeScreen = ({ navigation }: any) => {
     navigation.navigate('ProductListing', { searchQuery, category: null, categories });
   }
   const handleFilter = () => {
-    navigation.navigate('filter');
+    navigation.navigate('Filter');
   };
   const handleSplashAdPress = () => {
       navigation.navigate('ProductListing', { category: {name:'làm đẹp'}, categories });
@@ -485,10 +485,15 @@ const HomeScreen = ({ navigation }: any) => {
       case 'header':
         return <Header title="All Deals" showCart />;
 
-      case 'search':
-        return <SearchBar placeholder="Search for product" onPressSearch={handlePressSearch}
-          onChangeText={handleSearch} onPressFilter={handleFilter}
-        />;
+        case 'search':
+          return (
+            <SearchBar
+              placeholder="Search for product"
+              onChangeText={handleSearch}
+              onPressSearch={handlePressSearch}
+              onPressFilter={handleFilter}
+            />
+          );
       case 'featuredBanner':
         return <FeaturedBanner products={featuredProducts} onPressProduct={() => handleProductPress} />;
       case 'categoryList':
@@ -555,12 +560,12 @@ const HomeScreen = ({ navigation }: any) => {
       {/* {!hasAddedProducts && lamdep.length > 0 && (
         <AddProducts productsData={lamdep} onComplete={handleAddProductsComplete} />
       )} */}
-      <SplashAd 
+      {/* <SplashAd 
         onClose={handleSplashAdClose} 
         onPress={handleSplashAdPress} 
         imageUri="https://firebasestorage.googleapis.com/v0/b/commerce-f8062.appspot.com/o/Splash%20advertising%2Fvn-11134258-7ras8-m27zuycibr90b4.png?alt=media&token=0c154377-9b0a-41ba-8f80-042ca0c570dd"
         navigation={navigation}
-      />
+      /> */}
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -578,7 +583,7 @@ const styles = StyleSheet.create({
   section: {
     marginVertical: 10,
   },
-  sectionHeader: {
+  sectionHeader: {  
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
