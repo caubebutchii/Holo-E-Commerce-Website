@@ -11,18 +11,22 @@ const { width, height } = Dimensions.get('window');
 
 const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { product } = route.params;
-  const { user } = useUser(); 
+  const { user } = useUser();
   const [products, setProducts] = useState<any[]>([])
   const [selectedSize, setSelectedSize] = useState(product.sizes && product.sizes.length > 0 ? product.sizes[0] : null);
   const [selectedColor, setSelectedColor] = useState(product.colors && product.colors.length > 0 ? product.colors[0] : null);
   const [modalImage, setModalImage] = useState(product.image);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [quantity, setQuantity] = useState(1);// xử lý chọn số lượng
   const [selectedAddOrBuy, setSelectedAddOrBuy] = useState('')
   const flatListRef = useRef<FlatList<any>>(null);
   const mainFlatListRef = useRef(null);
 
-  const allImages = [product.image, ...Object.values(product.colorImages || {})];
+  const allImages = [
+    product.image,
+    ...Object.values(product.colorImages || {}).map((colorData:any) => colorData.image)
+  ];
   const colorEntries = Object.entries(product.colorImages || {});
 
   useEffect(() => {
@@ -48,6 +52,12 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       return;
     }
 
+    const availableQuantity = product.colorImages[selectedColor]?.available_quantity || 0;
+    if (quantity > availableQuantity) {
+      Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
+      return;
+    }
+
     try {
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
@@ -56,20 +66,20 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.colorImages[selectedColor] || product.image,
+        image: product.colorImages[selectedColor]?.image || product.image,
         color: selectedColor,
         size: selectedSize,
-        quantity: 1
+        quantity: quantity
       };
 
       if (cartDoc.exists()) {
         const cartData = cartDoc.data();
-        const existingItemIndex = cartData.items.findIndex((item: any) => 
+        const existingItemIndex = cartData.items.findIndex((item: any) =>
           item.id === product.id && item.color === selectedColor && item.size === selectedSize
         );
 
         if (existingItemIndex !== -1) {
-          cartData.items[existingItemIndex].quantity += 1;
+          cartData.items[existingItemIndex].quantity += quantity;
           await updateDoc(cartRef, { items: cartData.items });
         } else {
           await updateDoc(cartRef, {
@@ -96,8 +106,11 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       return;
     }
 
-    const defaultColor = product.colors && product.colors.length > 0 ? product.colors[0] : null;
-    const defaultSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : null;
+    const availableQuantity = product.colorImages[selectedColor]?.available_quantity || 0;
+    if (quantity > availableQuantity) {
+      Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
+      return;
+    }
 
     try {
       const cartRef = doc(db, 'carts', user.uid);
@@ -105,17 +118,17 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.colorImages[defaultColor] || product.image,
-        color: defaultColor,
-        size: defaultSize,
-        quantity: 1
+        image: product.colorImages[selectedColor]?.image || product.image,
+        color: selectedColor,
+        size: selectedSize,
+        quantity: quantity
       };
 
       await updateDoc(cartRef, {
         items: arrayUnion(newItem)
       });
 
-      navigation.navigate('Checkout', { 
+      navigation.navigate('Checkout', {
         product: newItem,
         buyNow: true
       });
@@ -151,29 +164,40 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     itemVisiblePercentThreshold: 50
   }).current;
 
-  const renderColorOption = ({ item: [color, image] }: any) => (
-    <TouchableOpacity
-      style={styles.colorOption}
-      onPress={() => {
-        setModalImage(image)
-        setSelectedColor(color)
-      }}
-    >
-      <Image
-        source={{ uri: image }}
-        style={styles.colorOptionImage}
-      />
-      <View style={[
-        styles.colorOptionCheck,
-        selectedColor === color && styles.colorOptionSelected
-      ]}>
+  const renderColorOption = ({ item }: any) => {
+    const [color, colorData] = item;
+    const isAvailable = colorData.available_quantity > 0;
+    console.log(color, colorData.available_quantity);
+    return (
+      <TouchableOpacity
+        style={[
+          styles.colorOption,
+          !isAvailable && styles.disabledColorOption,
+          selectedColor === color && styles.selectedColorOption
+        ]}
+        onPress={() => {
+          if (isAvailable) {
+            setModalImage(colorData.image);
+            setSelectedColor(color);
+            setQuantity(1); // Reset quantity when changing color
+          }
+        }}
+        disabled={!isAvailable}
+      >
+        <Image
+          source={{ uri: colorData.image }}
+          style={styles.colorOptionImage}
+        />
+        <View style={styles.colorOptionTextContainer}>
+          <Text style={styles.colorOptionText}>{color}</Text>
+          {!isAvailable && <Text style={styles.outOfStockText}>Hết hàng</Text>}
+        </View>
         {selectedColor === color && (
-          <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+          <Ionicons name="checkmark-circle" size={20} color="#007AFF" style={styles.checkIcon} />
         )}
-      </View>
-      <Text style={styles.colorOptionText}>{color}</Text>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderContent = () => (
     <>
@@ -218,7 +242,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
             </Text>
           </TouchableOpacity>
 
-          {colorEntries.map(([color, image], index) => (
+          {colorEntries.map(([color, colorData], index) => (
             <TouchableOpacity
               key={color}
               style={styles.thumbnailWrapper}
@@ -229,7 +253,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
               }}
             >
               <Image
-                source={{ uri: image }}
+                source={{ uri: colorData.image }}
                 style={[
                   styles.thumbnail,
                   currentImageIndex === index + 1 && styles.selectedThumbnail
@@ -272,7 +296,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Header onBackPress={handleBackPress} showCart transparent />
+        <Header title='' onBackPress={handleBackPress} showCart transparent />
       </View>
 
       <FlatList
@@ -297,7 +321,10 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
           <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buyButton} onPress={handleBuyNow}>
+        <TouchableOpacity style={styles.buyButton} onPress={() => {
+          setSelectedAddOrBuy('Buy Now');
+          setModalVisible(true);
+        }}>
           <Text style={styles.buyButtonText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
@@ -329,7 +356,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
                   </Text>
                 </Text>
                 <Text style={styles.ModelAvailable}>
-                  Kho: {product.available_quanlity}
+                  Kho: {product.colorImages[selectedColor]?.available_quantity || 0}
                 </Text>
               </View>
             </View>
@@ -364,12 +391,38 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
               </View>
             )}
 
+            <View style={styles.quantitySection}>
+              <Text style={styles.sectionTitle}>Số lượng</Text>
+              <View style={styles.quantityControl}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => setQuantity(prev => Math.max(1, prev - 1))}
+                >
+                  <Ionicons name="remove" size={24} color="#333" />
+                </TouchableOpacity>
+                <Text style={styles.quantityText}>{quantity}</Text>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => {
+                    const availableQuantity = product.colorImages[selectedColor]?.available_quantity || 0;
+                    if (quantity < availableQuantity) {
+                      setQuantity(prev => prev + 1);
+                    } else {
+                      Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
+                    }
+                  }}
+                >
+                  <Ionicons name="add" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <TouchableOpacity
               style={styles.modalActionButton}
-              onPress={handleAddToCart}
+              onPress={selectedAddOrBuy === 'Add to Cart' ? handleAddToCart : handleBuyNow}
             >
               <Text style={styles.modalActionButtonText}>
-                Thêm vào giỏ hàng
+                {selectedAddOrBuy === 'Add to Cart' ? 'Thêm vào giỏ hàng' : 'Mua ngay'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -380,6 +433,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+ 
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -472,7 +526,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 30
   },
   textRCM: {
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
     textAlign: 'center',
     fontWeight: '700',
     fontSize: 15
@@ -567,6 +621,43 @@ const styles = StyleSheet.create({
   ModelAvailable: {
     marginTop: 8,
     color: '#666',
+  },
+  disabledColorOption: {
+    opacity: 0.5,
+  },
+  selectedColorOption: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
+  },
+  colorOptionTextContainer: {
+    flex: 1,
+  },
+  outOfStockText: {
+    color: 'red',
+    fontSize: 12,
+  },
+  checkIcon: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+  },
+  quantitySection: {
+    marginBottom: 16,
+  },
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityButton: {
+    padding: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginHorizontal: 16,
   },
   colorSection: {
     marginBottom: 16,
