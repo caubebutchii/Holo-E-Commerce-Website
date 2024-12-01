@@ -8,20 +8,18 @@ export const generateVerificationCode = () => {
 
 // Hàm gửi email xác thực
 export const sendVerificationCodeEmail = async (email: string, code: string) => {
-  const auth = getAuth(app);
-  // Lấy user hiện tại
-  const user = auth.currentUser;
-  if (user) {
-    try {
-      const emailContent = `Mã xác thực của bạn là: ${code}`;
-      await sendEmailVerification(user, {
-        // Gửi email xác thực với nội dung là link đến trang verify với mã xác thực
-        handleCodeInApp: false,
-        // Tạo content email
-        emailContent: emailContent
-      });
-    } catch (error) {
-      throw error;
+  try {
+    const response = await fetch('http://192.168.1.108:3000/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to send email');
     }
+  } catch (error) {
+    throw error;
   }
 };

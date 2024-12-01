@@ -10,7 +10,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const [isVerified, setIsVerified] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const { email, code } = route.params;
-  const [inputCode, setInputCode] = useState('');
+  const [inputCode, setInputCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const { setUser } = useUser(); // Get setUser from context
 
@@ -47,7 +47,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
   }, [navigation]);
 
   const handleVerifyCode = async () => {
-    if (inputCode === code) {
+    if (inputCode.join('') === code) {
       const auth = getAuth(app);
       const db = getFirestore(app);
       const user = auth.currentUser;
@@ -72,6 +72,12 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
     } else {
       setError('Mã xác thực không đúng');
     }
+  };
+
+  const handleInputChange = (index, value) => {
+    const newInputCode = [...inputCode];
+    newInputCode[index] = value;
+    setInputCode(newInputCode);
   };
 
   const handleResendEmail = async () => {
@@ -105,12 +111,18 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
         </View>
       ) : (
         <View>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập mã xác thực"
-            value={inputCode}
-            onChangeText={setInputCode}
-          />
+          <View style={styles.codeInputContainer}>
+            {inputCode.map((digit, index) => (
+              <TextInput
+                key={index}
+                style={styles.codeInput}
+                value={digit}
+                onChangeText={(value) => handleInputChange(index, value)}
+                keyboardType="numeric"
+                maxLength={1}
+              />
+            ))}
+          </View>
           {error && <Text style={styles.errorText}>{error}</Text>}
           <TouchableOpacity style={styles.verifyButton} onPress={handleVerifyCode}>
             <Text style={styles.verifyButtonText}>Xác thực</Text>
@@ -197,6 +209,20 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 14,
     marginBottom: 10,
+  },
+  codeInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  codeInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    textAlign: 'center',
+    width: 40,
   },
 });
 

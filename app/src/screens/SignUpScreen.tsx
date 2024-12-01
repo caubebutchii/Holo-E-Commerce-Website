@@ -50,17 +50,6 @@ const SignUpScreen = ({ navigation }: any) => {
         // Gửi email xác thực
         await sendVerificationCodeEmail(email, code);
 
-        // // Save user information to Firestore
-        // const userData = {
-        //   id: user.uid,
-        //   name: name,
-        //   email: user.email,
-        //   phone: '',
-        // };
-        // const db = getFirestore(app);
-        // await setDoc(doc(db, 'users', user.uid), userData);
-        // setUser(userData); // Update user context
-
         navigation.navigate('VerificationWaiting', { email, code, name });
       } catch (error) {
         Alert.alert('Lỗi', error.message);
