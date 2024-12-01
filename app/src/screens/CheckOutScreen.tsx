@@ -203,9 +203,15 @@ const CheckoutScreen = ({ navigation, route }: any) => {
               for (const item of cartItems) {
                 if (selectedItems.includes(`${item.id}-${item.color}`)) {
                   const itemRef = doc(db, 'items', item.productRef);
-                  await updateDoc(itemRef, {
-                    [`colorImages.${item.color}.available_quantity`]: item.quantity
-                  });
+                  const itemDoc = await getDoc(itemRef);
+                  if (itemDoc.exists()) {
+                    const itemData = itemDoc.data();
+                    const availableQuantity = itemData.colorImages[item.color]?.available_quantity || 0;
+                    const newQuantity = availableQuantity - item.quantity;
+                    await updateDoc(itemRef, {
+                      [`colorImages.${item.color}.available_quantity`]: newQuantity
+                    });
+                  }
                 }
               }
 
@@ -320,7 +326,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
         )}
       </ScrollView>
       {user?.uid && (
-        <View style={styles.bottomContainer}>
+        <View style={styles.fixedBottomContainer}>
           <View style={styles.voucherContainer}>
             <TextInput
               style={styles.voucherInput}
@@ -716,6 +722,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginBottom:45
+  },
+  fixedBottomContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    position: 'absolute',
+    bottom: 55,
+    left: 0,
+    right: 0,
   },
   loginMessage: {
     fontSize: 16,
