@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { orderId } = route.params;
@@ -37,62 +38,71 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
-      </View>
-      {order ? (
-        <>
-          <Text style={styles.orderNumber}>Đơn hàng #{order.id.slice(0, 8)}</Text>
-          <Text style={styles.orderDate}>Ngày đặt: {order.createdAt.toDate().toLocaleDateString()}</Text>
-          <Text style={styles.orderTotal}>Tổng tiền: ₫{order.total.toLocaleString()}</Text>
-          <Text style={styles.sectionTitle}>Sản phẩm:</Text>
-          <FlatList
-            data={order.items}
-            renderItem={renderOrderItem}
-            keyExtractor={(item, index) => `${item.id}-${index}`}
-          />
-          <View style={styles.paymentInfo}>
-            <Text style={styles.sectionTitle}>Thông tin thanh toán:</Text>
-            <Text>Phương thức: {order.paymentMethod}</Text>
-          </View>
-        </>
-      ) : (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+    <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
         </View>
-      )}
-    </SafeAreaView>
+        {order ? (
+          <View style={styles.content}>
+            <Text style={styles.orderNumber}>Đơn hàng #{order.id.slice(0, 8)}</Text>
+            <Text style={styles.orderDate}>Ngày đặt: {order.createdAt.toDate().toLocaleDateString()}</Text>
+            <Text style={styles.orderTotal}>Tổng tiền: ₫{order.total.toLocaleString()}</Text>
+            <Text style={styles.sectionTitle}>Sản phẩm:</Text>
+            <FlatList
+              data={order.items}
+              renderItem={renderOrderItem}
+              keyExtractor={(item, index) => `${item.id}-${index}`}
+            />
+            <View style={styles.paymentInfo}>
+              <Text style={styles.sectionTitle}>Thông tin thanh toán:</Text>
+              <Text style={styles.paymentMethod}>Phương thức: {order.paymentMethod}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 20,
+  },
+  backButton: {
+    marginRight: 15,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 20,
+    color: '#fff',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  content: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
   },
   orderNumber: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
   },
   orderDate: {
     fontSize: 14,
@@ -100,17 +110,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   orderTotal: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#4CAF50',
-    marginTop: 5,
+    marginTop: 10,
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 10,
+    marginTop: 20,
     marginBottom: 10,
+    color: '#333',
   },
   orderItem: {
     flexDirection: 'row',
@@ -131,10 +142,12 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
   },
   productVariant: {
     fontSize: 14,
     color: '#666',
+    marginTop: 5,
   },
   productPrice: {
     fontSize: 16,
@@ -145,9 +158,14 @@ const styles = StyleSheet.create({
   productQuantity: {
     fontSize: 14,
     color: '#666',
+    marginTop: 5,
   },
   paymentInfo: {
     marginTop: 20,
+  },
+  paymentMethod: {
+    fontSize: 16,
+    color: '#333',
   },
   loadingContainer: {
     flex: 1,
@@ -157,4 +175,3 @@ const styles = StyleSheet.create({
 });
 
 export default OrderDetailsScreen;
-

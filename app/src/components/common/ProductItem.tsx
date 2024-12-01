@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 16,
-    color: '#ed154b',
+    color: '#0dd7df',
     marginTop: 4,
     fontWeight: 'bold'
   },
   d:{
     fontSize: 10,
-    color: '#ed154b',
+    color: 'black',
     marginTop: 4,
     fontWeight: 'bold',
     textAlign:'justify'

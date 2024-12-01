@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF3B30',
+    color: '#0dd7df',
     marginBottom: 8,
   },
   originalPrice: {
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   },
   buyButton: {
     flex: 2,
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   modelPrice: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FF3B30',
+    color: '#0dd7df',
   },
   modelOriginalPrice: {
     fontSize: 14,
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   modalActionButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',

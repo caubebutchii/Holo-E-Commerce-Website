@@ -20,12 +20,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ placeholder, onChangeText, onPres
 
   return (
     <LinearGradient
-      colors={['#66FFCC', '#99FFEE']}
+      colors={['#dcf1f9', '#dcf1f9']}
       style={styles.gradient}
     >
       <View style={styles.container}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#999" />
+          <Ionicons name="search" size={20} color="#323660" />
           <TextInput
             style={styles.input}
             placeholder={placeholder}
@@ -35,12 +35,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ placeholder, onChangeText, onPres
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={onPressSearch} style={styles.searchButton}>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
+              <Ionicons name="arrow-forward" size={20} color="#cbf6f7" />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity onPress={onPressFilter} style={styles.filterButton}>
-          <Ionicons name="options-outline" size={20} color="#999" />
+          <Ionicons name="options-outline" size={20} color="#323660" />
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   searchButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0dd7df',
     borderRadius: 8,
     padding: 8,
   },
