@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, TextInput, FlatList, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../firebase/firebaseConfig';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
 import { useFocusEffect } from '@react-navigation/native';
+
+const { height } = Dimensions.get('window');
 
 const CheckoutScreen = ({ navigation, route }: any) => {
   const [checkoutStage, setCheckoutStage] = useState('cart');
@@ -13,10 +15,11 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [rating, setRating] = useState(0);
   const [cartItems, setCartItems] = useState([]);
+  const [outOfStockItems, setOutOfStockItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [total, setTotal] = useState(0);
   const { user } = useUser();
-  const [text, setText] = useState('');
+  const [showOutOfStock, setShowOutOfStock] = useState(false);
 
   const fetchCartItems = useCallback(async () => {
     console.log('Fetching cart items for user:', user?.uid);
@@ -26,19 +29,51 @@ const CheckoutScreen = ({ navigation, route }: any) => {
 
       if (cartDoc.exists()) {
         const items = cartDoc.data().items || [];
-        setCartItems(items);
-        setText('');
-        calculateTotal(items);
+        const updatedItems = await Promise.all(items.map(async (item) => {
+          const itemsRef = collection(db, 'items');
+          const q = query(itemsRef, where("id", "==", item.id));
+          const querySnapshot = await getDocs(q);
+
+          const productDoc = querySnapshot.docs[0];
+          if (productDoc.exists()) {
+            const productData = productDoc.data();
+            const availableQuantity = productData.colorImages[item.color]?.available_quantity || 0;
+            console.log('Available quantity for', item.name, item.color, availableQuantity);
+            const prevQuantity = item.quantity;
+            if (availableQuantity === 0) {
+              return { ...item, prevQuantity: prevQuantity, quantity: 0, outOfStock: true };
+            } else if (item.quantity > availableQuantity && availableQuantity > 0) {
+              return { ...item, quantity: availableQuantity };
+            } else if (item.quantity === 0 && availableQuantity > 0) {
+              if (item.prevQuantity > availableQuantity) {
+                return { ...item, quantity: availableQuantity, outOfStock: false };
+              } else {
+                return { ...item, quantity: 1, outOfStock: false };
+              }
+            }
+          } else {
+            console.log('Product not found:', item.id, typeof item.id);
+            console.log('Product Ref: ', item.productRef, typeof item.productRef);
+          }
+          return item;
+        }));
+
+        await updateDoc(cartRef, { items: updatedItems });
+        const inStockItems = updatedItems.filter(item => !item.outOfStock);
+        const outOfStockItems = updatedItems.filter(item => item.outOfStock);
+        setCartItems(inStockItems);
+        setOutOfStockItems(outOfStockItems);
+        calculateTotal(inStockItems);
       } else {
         await setDoc(cartRef, { items: [] });
-        setText('Giỏ hàng trống. Đã tạo giỏ hàng mới cho bạn.');
         setCartItems([]);
+        setOutOfStockItems([]);
       }
     } else {
-      setText('Vui lòng đăng nhập để xem giỏ hàng.');
       setCartItems([]);
+      setOutOfStockItems([]);
     }
-  }, [user]);
+  }, [user, calculateTotal]);
 
   const calculateTotal = useCallback((items) => {
     if (!Array.isArray(items) || items.length === 0) {
@@ -48,7 +83,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
 
     let totalAmount = 0;
     items.forEach((item) => {
-      if (selectedItems.includes(item.id)) {
+      if (selectedItems.includes(`${item.id}-${item.color}`)) {
         totalAmount += item.price * item.quantity;
       }
     });
@@ -93,10 +128,11 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   const toggleSelectItem = (item) => {
     if (item && item.id) {
       setSelectedItems((prevSelectedItems) => {
-        if (prevSelectedItems.includes(item.id)) {
-          return prevSelectedItems.filter((id) => id !== item.id);
+        const itemKey = `${item.id}-${item.color}`;
+        if (prevSelectedItems.includes(itemKey)) {
+          return prevSelectedItems.filter((key) => key !== itemKey);
         } else {
-          return [...prevSelectedItems, item.id];
+          return [...prevSelectedItems, itemKey];
         }
       });
     } else {
@@ -104,15 +140,103 @@ const CheckoutScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectedItems.length === cartItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map(item => `${item.id}-${item.color}`));
+    }
+  };
+
+  const removeItemFromCart = async (item) => {
+    if (!user?.uid) {
+      Alert.alert('Error', 'Please log in to remove items from cart');
+      return;
+    }
+
+    try {
+      const cartRef = doc(db, 'carts', user.uid);
+      const cartDoc = await getDoc(cartRef);
+
+      if (cartDoc.exists()) {
+        const cartData = cartDoc.data();
+        const updatedItems = cartData.items.filter(
+          (cartItem) => !(cartItem.id === item.id && cartItem.color === item.color)
+        );
+        await updateDoc(cartRef, { items: updatedItems });
+        fetchCartItems();
+      }
+    } catch (error) {
+      console.error("Error removing item from cart: ", error);
+      Alert.alert('Error', 'Failed to remove item from cart');
+    }
+  };
+
+  const placeOrder = async () => {
+    if (selectedItems.length === 0) {
+      Alert.alert('Lỗi', 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.');
+      return;
+    }
+
+    Alert.alert(
+      'Xác nhận đặt hàng',
+      'Bạn có chắc chắn muốn đặt hàng?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Đồng ý',
+          onPress: async () => {
+            try {
+              // Lưu đơn hàng vào collection 'orders'
+              const orderRef = await addDoc(collection(db, 'orders'), {
+                userId: user.uid,
+                items: cartItems.filter(item => selectedItems.includes(`${item.id}-${item.color}`)),
+                total: total,
+                paymentMethod: selectedPaymentMethod,
+                createdAt: serverTimestamp()
+              });
+
+              // Cập nhật số lượng sản phẩm trong 'items'
+              for (const item of cartItems) {
+                if (selectedItems.includes(`${item.id}-${item.color}`)) {
+                  const itemRef = doc(db, 'items', item.productRef);
+                  await updateDoc(itemRef, {
+                    [`colorImages.${item.color}.available_quantity`]: item.quantity
+                  });
+                }
+              }
+
+              // Xóa các item đã mua khỏi giỏ hàng
+              const cartRef = doc(db, 'carts', user.uid);
+              const updatedCartItems = cartItems.filter(item => !selectedItems.includes(`${item.id}-${item.color}`));
+              await updateDoc(cartRef, { items: updatedCartItems });
+
+              setOrderPlaced(true);
+              setCheckoutStage('confirmation');
+            } catch (error) {
+              console.error("Error placing order: ", error);
+              Alert.alert('Lỗi', 'Không thể đặt hàng. Vui lòng thử lại sau.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderCartItem = ({ item }: any) => (
     <View style={styles.cartItem}>
-      <TouchableOpacity onPress={() => toggleSelectItem(item)}>
-        <Ionicons
-          name={selectedItems.includes(item.id) ? 'checkbox' : 'square-outline'}
-          size={24}
-          color="#007AFF"
-        />
-      </TouchableOpacity>
+      {!item.outOfStock && (
+        <TouchableOpacity onPress={() => toggleSelectItem(item)}>
+          <Ionicons
+            name={selectedItems.includes(`${item.id}-${item.color}`) ? 'checkbox' : 'square-outline'}
+            size={24}
+            color="#007AFF"
+          />
+        </TouchableOpacity>
+      )}
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
@@ -126,40 +250,102 @@ const CheckoutScreen = ({ navigation, route }: any) => {
           <Text style={styles.productQuantity}>x{item.quantity}</Text>
         </View>
       </View>
+      <TouchableOpacity onPress={() => {
+        Alert.alert(
+          'Xóa sản phẩm',
+          'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
+          [
+            {
+              text: 'Hủy',
+              style: 'cancel'
+            },
+            {
+              text: 'Xóa',
+              onPress: () => removeItemFromCart(item)
+            }
+          ]
+        );
+      }}>
+        <Ionicons name="close-circle" size={24} color="#FF3B30" />
+      </TouchableOpacity>
     </View>
   );
 
   const renderCart = () => (
-    <FlatList
-      data={cartItems}
-      renderItem={renderCartItem}
-      keyExtractor={(item, index) => index.toString()}
-      ListHeaderComponent={() => (
-        <Text style={styles.sectionTitle}>Checkout</Text>
-      )}
-      
-      ListFooterComponent={() => (
-        <>
+    <View style={styles.cartContainer}>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.sectionTitle}>Giỏ hàng</Text>
+        {user?.uid ? (
+          <>
+            <TouchableOpacity style={styles.selectAllButton} onPress={toggleSelectAll}>
+              <Ionicons
+                name={selectedItems.length === cartItems.length ? 'checkbox' : 'square-outline'}
+                size={24}
+                color="#007AFF"
+              />
+              <Text style={styles.selectAllText}>Chọn tất cả</Text>
+            </TouchableOpacity>
+            <FlatList
+              data={cartItems}
+              renderItem={renderCartItem}
+              keyExtractor={(item, index) => `${item.id}-${item.color}-${index}`}
+              scrollEnabled={false}
+            />
+            {outOfStockItems.length > 0 && (
+              <View style={styles.outOfStockContainer}>
+                <TouchableOpacity 
+                  style={styles.outOfStockHeader} 
+                  onPress={() => setShowOutOfStock(!showOutOfStock)}
+                >
+                  <Text style={styles.outOfStockTitle}>Sản phẩm hết hàng ({outOfStockItems.length})</Text>
+                  <Ionicons 
+                    name={showOutOfStock ? 'chevron-up' : 'chevron-down'} 
+                    size={24} 
+                    color="#333"
+                  />
+                </TouchableOpacity>
+                {showOutOfStock && (
+                  <FlatList
+                    data={outOfStockItems}
+                    renderItem={renderCartItem}
+                    keyExtractor={(item, index) => `outofstock-${item.id}-${item.color}-${index}`}
+                    scrollEnabled={false}
+                  />
+                )}
+              </View>
+            )}
+          </>
+        ) : (
+          <Text style={styles.loginMessage}>Vui lòng đăng nhập để xem giỏ hàng của bạn.</Text>
+        )}
+      </ScrollView>
+      {user?.uid && (
+        <View style={styles.bottomContainer}>
           <View style={styles.voucherContainer}>
             <TextInput
               style={styles.voucherInput}
-              placeholder="Enter voucher code"
+              placeholder="Nhập mã giảm giá"
             />
             <TouchableOpacity style={styles.applyButton}>
-              <Text style={styles.applyButtonText}>Apply</Text>
+              <Text style={styles.applyButtonText}>Áp dụng</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.total}>{text}</Text>
-          <Text style={styles.total}>Total: ₫{total.toLocaleString()}</Text>
+          <Text style={styles.total}>Tổng cộng: ₫{total.toLocaleString()}</Text>
           <TouchableOpacity
             style={styles.nextButton}
-            onPress={() => setCheckoutStage('payment')}
+            onPress={() => {
+              if (selectedItems.length === 0) {
+                Alert.alert('Lỗi', 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.');
+              } else {
+                setCheckoutStage('payment');
+              }
+            }}
           >
-            <Text style={styles.nextButtonText}>Next →</Text>
+            <Text style={styles.nextButtonText}>Đặt hàng →</Text>
           </TouchableOpacity>
-        </>
+        </View>
       )}
-    />
+    </View>
   );
 
   const renderPaymentMethod = (method, logo, lastDigits) => (
@@ -181,85 +367,87 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   );
 
   const renderPayment = () => (
-    <FlatList
-      data={[]}
-      renderItem={null}
-      ListHeaderComponent={() => (
-        <>
-          <Text style={styles.sectionTitle}>Payment</Text>
-          <Text style={styles.total}>TOTAL: ₫{total.toLocaleString()}</Text>
-          {renderPaymentMethod('visa', 'https://example.com/visa-logo.png', '2334')}
-          {renderPaymentMethod('mastercard', 'https://example.com/mastercard-logo.png', '3774')}
-          {renderPaymentMethod('paypal', 'https://example.com/paypal-logo.png', 'abc@gmail.com')}
-        </>
-      )}
-      ListFooterComponent={() => (
-        <>
-          <TouchableOpacity
-            style={styles.payNowButton}
-            onPress={() => setOrderPlaced(true)}
-          >
-            <Text style={styles.payNowButtonText}>Pay now</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.addCard}>
-            <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-            <Text style={styles.addCardText}>Add new card</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    />
+    <View style={styles.paymentContainer}>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.sectionTitle}>Thanh toán</Text>
+        <Text style={styles.total}>TỔNG CỘNG: ₫{total.toLocaleString()}</Text>
+        {renderPaymentMethod('visa', 'https://example.com/visa-logo.png', '2334')}
+        {renderPaymentMethod('mastercard', 'https://example.com/mastercard-logo.png', '3774')}
+        {renderPaymentMethod('paypal', 'https://example.com/paypal-logo.png', 'abc@gmail.com')}
+        <TouchableOpacity
+          style={styles.payNowButton}
+          onPress={placeOrder}
+        >
+          <Text style={styles.payNowButtonText}>Thanh toán ngay</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addCard}>
+          <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+          <Text style={styles.addCardText}>Thêm thẻ mới</Text>
+        </TouchableOpacity>
+      </ScrollView>
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setCheckoutStage('cart')}
+        >
+          <Text style={styles.backButtonText}>← Quay lại giỏ hàng</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 
   const renderOrderConfirmation = () => (
-    <FlatList
-      data={[]}
-      renderItem={null}
-      ListHeaderComponent={() => (
-        <View style={styles.confirmationContainer}>
-          <Ionicons name="checkmark-circle" size={64} color="green" />
-          <Text style={styles.confirmationTitle}>Order placed successfully!</Text>
-          <Text style={styles.confirmationDescription}>Commodo eu ut sunt qui minim fugiat elit nisi enim</Text>
-          <View style={styles.orderSummary}>
-            <Text>Subtotal</Text>
-            <Text>₫{total.toLocaleString()}</Text>
-          </View>
-          <View style={styles.orderSummary}>
-            <Text>Tax (10%)</Text>
-            <Text>₫{(total * 0.1).toLocaleString()}</Text>
-          </View>
-          <View style={styles.orderSummary}>
-            <Text>Fees</Text>
-            <Text>₫0</Text>
-          </View>
-          <View style={styles.orderSummary}>
-            <Text>Card</Text>
-            <Text>****** 2334</Text>
-          </View>
-          <View style={styles.orderSummary}>
-            <Text style={styles.totalText}>Total</Text>
-            <Text style={styles.totalAmount}>₫{(total * 1.1).toLocaleString()}</Text>
-          </View>
-          <Text style={styles.ratingPrompt}>How was your experience?</Text>
-          <View style={styles.ratingContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                <Ionicons
-                  name={star <= rating ? 'star' : 'star-outline'}
-                  size={32}
-                  color={star <= rating ? '#FFD700' : '#C0C0C0'}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            style={styles.backToHomeButton}
-            onPress={() => navigation.navigate('Home')}
-          >
-            <Text style={styles.backToHomeButtonText}>Back to Home</Text>
+    <ScrollView contentContainerStyle={styles.confirmationContainer}>
+      <Ionicons name="checkmark-circle" size={64} color="green" />
+      <Text style={styles.confirmationTitle}>Đặt hàng thành công!</Text>
+      <Text style={styles.confirmationDescription}>Cảm ơn bạn đã mua hàng!</Text>
+      <View style={styles.orderSummary}>
+        <Text>Tổng tiền hàng</Text>
+        <Text>₫{total.toLocaleString()}</Text>
+      </View>
+      <View style={styles.orderSummary}>
+        <Text>Thuế (10%)</Text>
+        <Text>₫{(total * 0.1).toLocaleString()}</Text>
+      </View>
+      <View style={styles.orderSummary}>
+        <Text>Phí vận chuyển</Text>
+        <Text>₫0</Text>
+      </View>
+      <View style={styles.orderSummary}>
+        <Text>Phương thức thanh toán</Text>
+        <Text>{selectedPaymentMethod === 'visa' ? 'Visa ******2334' : 
+               selectedPaymentMethod === 'mastercard' ? 'Mastercard ******3774' : 
+               'PayPal abc@gmail.com'}</Text>
+      </View>
+      <View style={styles.orderSummary}>
+        <Text style={styles.totalText}>Tổng cộng</Text>
+        <Text style={styles.totalAmount}>₫{(total * 1.1).toLocaleString()}</Text>
+      </View>
+      <Text style={styles.ratingPrompt}>Bạn đánh giá trải nghiệm mua hàng như thế nào?</Text>
+      <View style={styles.ratingContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity key={star} onPress={() => setRating(star)}>
+            <Ionicons
+              name={star <= rating ? 'star' : 'star-outline'}
+              size={32}
+              color={star <= rating ? '#FFD700' : '#C0C0C0'}
+            />
           </TouchableOpacity>
-        </View>
-      )}
-    />
+        ))}
+      </View>
+      <TouchableOpacity
+        style={styles.backToHomeButton}
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Text style={styles.backToHomeButtonText}>Quay về trang chủ</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => setCheckoutStage('payment')}
+      >
+        <Text style={styles.backButtonText}>← Quay lại thanh toán</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 
   const renderContent = () => {
@@ -285,6 +473,15 @@ const CheckoutScreen = ({ navigation, route }: any) => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  cartContainer: {
+    flex: 1,
+  },
+  paymentContainer: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
     padding: 16,
   },
@@ -431,6 +628,7 @@ const styles = StyleSheet.create({
   confirmationContainer: {
     alignItems: 'center',
     paddingVertical: 32,
+    paddingHorizontal: 16,
   },
   confirmationTitle: {
     fontSize: 24,
@@ -476,6 +674,63 @@ const styles = StyleSheet.create({
   },
   backToHomeButtonText: {
     color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  outOfStockText: {
+    color: '#FF3B30',
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  selectAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  selectAllText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  outOfStockContainer: {
+    marginTop: 16,
+  },
+  outOfStockHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  outOfStockTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  bottomContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  loginMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  backButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  backButtonText: {
+    color: '#007AFF',
     fontSize: 18,
     fontWeight: 'bold',
   },

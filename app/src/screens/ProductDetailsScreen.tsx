@@ -22,6 +22,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   const [selectedAddOrBuy, setSelectedAddOrBuy] = useState('')
   const flatListRef = useRef<FlatList<any>>(null);
   const mainFlatListRef = useRef(null);
+  const [productRef, setProductRef] = useState('');
 
   const allImages = [
     product.image,
@@ -37,6 +38,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
         const fetchedProducts: any[] = [];
         querySnapshot.forEach((doc) => {
           fetchedProducts.push({ id: doc.id, ...doc.data() });
+          setProductRef(doc.id);
         });
         setProducts(fetchedProducts);
       } catch (error) {
@@ -46,51 +48,79 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     fetchProducts();
   }, [])
 
+  // Hàm xử lý thêm sản phẩm vào giỏ hàng
   const handleAddToCart = async () => {
     if (!user.uid) {
       Alert.alert('Thông báo', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
       return;
     }
 
-    const availableQuantity = product.colorImages[selectedColor]?.available_quantity || 0;
-    if (quantity > availableQuantity) {
-      Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
-      return;
-    }
-
     try {
+      const itemsRef = collection(db, 'items');
+      const q = query(itemsRef, where("id", "==", product.id));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        Alert.alert('Lỗi', 'Không tìm thấy sản phẩm');
+        return;
+      }
+
+      const productDoc = querySnapshot.docs[0];
+      const productData = productDoc.data();
+      const availableQuantity = productData.colorImages[selectedColor]?.available_quantity || 0;
+
+      if (availableQuantity === 0) {
+        Alert.alert('Thông báo', 'Sản phẩm đã hết hàng.');
+        return;
+      }
+
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
 
-      const newItem = {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.colorImages[selectedColor]?.image || product.image,
-        color: selectedColor,
-        size: selectedSize,
-        quantity: quantity
-      };
-
+      let updatedCart;
       if (cartDoc.exists()) {
         const cartData = cartDoc.data();
         const existingItemIndex = cartData.items.findIndex((item: any) =>
-          item.id === product.id && item.color === selectedColor && item.size === selectedSize
+          item.id === product.id && item.color === selectedColor
         );
 
         if (existingItemIndex !== -1) {
-          cartData.items[existingItemIndex].quantity += quantity;
-          await updateDoc(cartRef, { items: cartData.items });
+          const currentQuantity = cartData.items[existingItemIndex].quantity;
+          const newQuantity = Math.min(currentQuantity + quantity, availableQuantity);
+          
+          if (newQuantity === currentQuantity) {
+            Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
+            return;
+          }
+
+          cartData.items[existingItemIndex].quantity = newQuantity;
+          updatedCart = cartData.items;
         } else {
-          await updateDoc(cartRef, {
-            items: arrayUnion(newItem)
-          });
+          const newItem = {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.colorImages[selectedColor]?.image || product.image,
+            color: selectedColor,
+            quantity: Math.min(quantity, availableQuantity),
+            productRef: productRef
+          };
+          updatedCart = [...cartData.items, newItem];
         }
       } else {
-        await setDoc(cartRef, {
-          items: [newItem]
-        });
+        const newItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.colorImages[selectedColor]?.image || product.image,
+          color: selectedColor,
+          quantity: Math.min(quantity, availableQuantity),
+          productRef: productRef
+        };
+        updatedCart = [newItem];
       }
+
+      await setDoc(cartRef, { items: updatedCart }, { merge: true });
 
       Alert.alert('Thành công', 'Sản phẩm đã được thêm vào giỏ hàng');
       setModalVisible(false);
@@ -106,24 +136,36 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       return;
     }
 
-    const availableQuantity = product.colorImages[selectedColor]?.available_quantity || 0;
-    if (quantity > availableQuantity) {
-      Alert.alert('Thông báo', `Chỉ còn ${availableQuantity} sản phẩm trong kho.`);
-      return;
-    }
-
     try {
-      const cartRef = doc(db, 'carts', user.uid);
+      const itemsRef = collection(db, 'items');
+      const q = query(itemsRef, where("id", "==", product.id));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        Alert.alert('Lỗi', 'Không tìm thấy sản phẩm');
+        return;
+      }
+
+      const productDoc = querySnapshot.docs[0];
+      const productData = productDoc.data();
+      const availableQuantity = productData.colorImages[selectedColor]?.available_quantity || 0;
+
+      if (availableQuantity === 0) {
+        Alert.alert('Thông báo', 'Sản phẩm đã hết hàng.');
+        return;
+      }
+
       const newItem = {
         id: product.id,
         name: product.name,
         price: product.price,
         image: product.colorImages[selectedColor]?.image || product.image,
         color: selectedColor,
-        size: selectedSize,
-        quantity: quantity
+        quantity: Math.min(quantity, availableQuantity),
+        productRef: productRef
       };
 
+      const cartRef = doc(db, 'carts', user.uid);
       await updateDoc(cartRef, {
         items: arrayUnion(newItem)
       });
