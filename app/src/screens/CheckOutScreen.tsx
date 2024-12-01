@@ -715,6 +715,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    marginBottom:45
   },
   loginMessage: {
     fontSize: 16,
