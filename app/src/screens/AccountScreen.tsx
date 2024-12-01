@@ -3,52 +3,37 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Ale
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
 
 const AccountScreen = ({ navigation }: any) => {
-  // Lấy thông tin user từ context
   const { user, setUser } = useUser();
-  // Lấy auth từ firebase
-  // auth là một object chứa các method để thực hiện các thao tác liên quan đến authentication
   const auth = getAuth(app);
-  // Tạo state để lưu tên của user
   const [userName, setUserName] = useState('Bạn chưa đăng nhập');
-  const [btn, setBtn] = useState('Đăng nhập');
-  // Lấy thông tin user từ firestore và set vào state khi user thay đổi
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   useEffect(() => {
-    // check xem user có tồn tại không
-    if(user.uid == ''){
-      // nếu không tồn tại thì chuyển về welcome screen
-      setBtn('Đăng nhập');
-    }
-    else
-    {
-      // nếu tồn tại thì lấy thông tin user từ context và set vào state
+    if (user.uid) {
       setUserName(user.name);
-      setBtn('Đăng xuất');
+      setIsLoggedIn(true);
+    } else {
+      setUserName('Bạn chưa đăng nhập');
+      setIsLoggedIn(false);
     }
-  }, [user, setUser]);
+  }, [user]);
 
   const handleSignOut = async () => {
     Alert.alert(
       'Xác nhận đăng xuất',
       'Bạn có chắc chắn muốn đăng xuất?',
       [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
+        { text: 'Hủy', style: 'cancel' },
         {
           text: 'OK',
           onPress: async () => {
             try {
               await signOut(auth);
-              // navigation.replace('Welcome');
-              // cập nhật thông tin user trong context
-              setUser({uid: '', name: '', email: '', phone: '', address: ''});
-              setBtn('Đăng nhập');
-              setUserName('');
+              setUser({ uid: '', name: '', email: '', phone: '', address: '' });
+              setIsLoggedIn(false);
             } catch (error) {
               console.error('Error signing out: ', error);
             }
@@ -59,26 +44,13 @@ const AccountScreen = ({ navigation }: any) => {
     );
   };
 
-  const handleNoUser = () => {
-    navigation.navigate('Welcome');
-    return;
-  }
-
-  const handletemPress = (item) => {
-    // Nếu user chưa đăng nhập thì hiện thông báo là bạn chưa đăng nhập
-    if (item.screen && !user.uid) {
-      return () => {
-        Alert.alert('Thông báo', 'Bạn chưa đăng nhập');
-      };
+  const handleItemPress = (item) => {
+    if (item.screen && !isLoggedIn) {
+      Alert.alert('Thông báo', 'Bạn chưa đăng nhập');
+    } else if (item.screen) {
+      navigation.navigate(item.screen);
     }
-    else
-    {
-      // Nếu user đã đăng nhập thì chuyển sang screen tương ứng
-      return () => {
-        navigation.navigate(item.screen);
-      };
-    }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -90,14 +62,13 @@ const AccountScreen = ({ navigation }: any) => {
         {[
           { label: 'Cập nhật thông tin', icon: 'person-outline', screen: 'UpdateProfile' },
           { label: 'Thay đổi mật khẩu', icon: 'lock-closed-outline', screen: 'ChangePassword' },
-          { label: 'Ngôn ngữ', icon: 'globe-outline' },
+          { label: 'Xem đơn mua', icon: 'list-outline', screen: 'OrderList' },
           { label: 'Về ứng dụng', icon: 'information-circle-outline' },
         ].map((item, index) => (
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
-            // tryền screen vào navigation.navigate
-            onPress={handletemPress(item)}
+            onPress={() => handleItemPress(item)}
           >
             <Ionicons name={item.icon} size={24} color="#4CAF50" />
             <Text style={styles.menuItemText}>{item.label}</Text>
@@ -105,15 +76,30 @@ const AccountScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton} 
-          // nếu user đã đăng nhập thì hiển thị nút đăng xuất, ngược lại hiển thị nút đăng nhập
-          onPress={btn == 'Đăng nhập' ? handleNoUser : handleSignOut}>
-          <Text style={styles.logoutButtonText}>{btn}</Text>
-        </TouchableOpacity>
+        {isLoggedIn ? (
+          <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+            <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.authButtonsContainer}>
+            <TouchableOpacity
+              style={styles.authButton}
+              onPress={() => navigation.navigate('SignIn')}
+            >
+              <Text style={styles.authButtonText}>Đăng nhập</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.authButton}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              <Text style={styles.authButtonText}>Đăng ký</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -154,6 +140,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  authButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    margin: 20,
+  },
+  authButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  authButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default AccountScreen;
+

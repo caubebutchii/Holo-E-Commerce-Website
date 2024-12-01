@@ -78,7 +78,7 @@ const SignInScreen = ({ navigation }: any) => {
 
         navigation.navigate('Main');
       } catch (error) {
-        console.error('Sign in error:', error);
+        // console.error('Sign in error:', error);
         Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
       }
     }

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
@@ -20,8 +21,10 @@ export default function ChangePasswordScreen({ navigation }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(false);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
@@ -39,6 +42,7 @@ export default function ChangePasswordScreen({ navigation }) {
   };
 
   const handleChangePassword = async () => {
+    setLoading(true);
     const newErrors = {};
 
     if (!currentPassword) {
@@ -64,6 +68,7 @@ export default function ChangePasswordScreen({ navigation }) {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setLoading(false);
       return;
     }
 
@@ -83,68 +88,77 @@ export default function ChangePasswordScreen({ navigation }) {
     } catch (error) {
       setErrors({ currentPassword: 'Mật khẩu hiện tại không đúng' });
     }
+    setLoading(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cập nhật mật khẩu</Text>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="Mật khẩu hiện tại"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry={!showCurrentPassword}
-          />
-          <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)} style={styles.eyeIcon}>
-            <Ionicons name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
-          </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
         </View>
-        {errors.currentPassword && <Text style={styles.errorText}>{errors.currentPassword}</Text>}
-      </View>
+      ) : (
+        <>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Cập nhật mật khẩu</Text>
+          </View>
 
-      <View style={styles.inputContainer}>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="Mật khẩu mới"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry={!showNewPassword}
-          />
-          <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={styles.eyeIcon}>
-            <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+          <View style={styles.inputContainer}>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Mật khẩu hiện tại"
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry={!showCurrentPassword}
+              />
+              <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+              </TouchableOpacity>
+            </View>
+            {errors.currentPassword && <Text style={styles.errorText}>{errors.currentPassword}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Mật khẩu mới"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={!showNewPassword}
+              />
+              <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+              </TouchableOpacity>
+            </View>
+            {errors.newPassword && <Text style={styles.errorText}>{errors.newPassword}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Xác nhận mật khẩu mới"
+                value={confirmNewPassword}
+                onChangeText={setConfirmNewPassword}
+                secureTextEntry={!showConfirmNewPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showConfirmNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+              </TouchableOpacity>
+            </View>
+            {errors.confirmNewPassword && <Text style={styles.errorText}>{errors.confirmNewPassword}</Text>}
+          </View>
+
+          <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
+            <Text style={styles.changePasswordButtonText}>Lưu thay đổi</Text>
           </TouchableOpacity>
-        </View>
-        {errors.newPassword && <Text style={styles.errorText}>{errors.newPassword}</Text>}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="Xác nhận mật khẩu mới"
-            value={confirmNewPassword}
-            onChangeText={setConfirmNewPassword}
-            secureTextEntry={!showConfirmNewPassword}
-          />
-          <TouchableOpacity onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)} style={styles.eyeIcon}>
-            <Ionicons name={showConfirmNewPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
-          </TouchableOpacity>
-        </View>
-        {errors.confirmNewPassword && <Text style={styles.errorText}>{errors.confirmNewPassword}</Text>}
-      </View>
-
-      <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
-        <Text style={styles.changePasswordButtonText}>Lưu thay đổi</Text>
-      </TouchableOpacity>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -199,5 +213,10 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginTop: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

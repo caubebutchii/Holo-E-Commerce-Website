@@ -202,7 +202,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
               // Cập nhật số lượng sản phẩm trong 'items'
               for (const item of cartItems) {
                 if (selectedItems.includes(`${item.id}-${item.color}`)) {
-                  const itemRef = doc(db, 'items', item.productRef);
+                  const itemRef = doc(db, 'items', item.id);
                   await updateDoc(itemRef, {
                     [`colorImages.${item.color}.available_quantity`]: item.quantity
                   });
