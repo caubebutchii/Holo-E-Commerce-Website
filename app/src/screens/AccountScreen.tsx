@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { useUser } from '../context/UserContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AccountScreen = ({ navigation }: any) => {
   const { user, setUser } = useUser();
@@ -52,19 +53,24 @@ const AccountScreen = ({ navigation }: any) => {
     }
   };
 
+  const menuItems = [
+    { label: 'Cập nhật thông tin', icon: 'person-outline', screen: 'UpdateProfile' },
+    { label: 'Thay đổi mật khẩu', icon: 'lock-closed-outline', screen: 'ChangePassword' },
+    { label: 'Xem đơn mua', icon: 'list-outline', screen: 'OrderList' },
+    { label: 'Về ứng dụng', icon: 'information-circle-outline' },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{userName}</Text>
-        </View>
-
-        {[
-          { label: 'Cập nhật thông tin', icon: 'person-outline', screen: 'UpdateProfile' },
-          { label: 'Thay đổi mật khẩu', icon: 'lock-closed-outline', screen: 'ChangePassword' },
-          { label: 'Xem đơn mua', icon: 'list-outline', screen: 'OrderList' },
-          { label: 'Về ứng dụng', icon: 'information-circle-outline' },
-        ].map((item, index) => (
+      <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={styles.header}>
+      <Image
+          source={isLoggedIn ? require('../../assets/images/default-avatar.jpg') : { uri: 'https://via.placeholder.com/100' } }
+          style={styles.avatar}
+        />
+        <Text style={styles.headerTitle}>{userName}</Text>
+      </LinearGradient>
+      <ScrollView style={styles.content}>
+        {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
@@ -104,51 +110,70 @@ const AccountScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#4CAF50',
     padding: 20,
     alignItems: 'center',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
   },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
   menuItemText: {
     flex: 1,
     fontSize: 16,
     marginLeft: 20,
+    color: '#333',
   },
   logoutButton: {
-    margin: 20,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    backgroundColor: '#0dd7df',
+    borderRadius: 10,
     padding: 15,
     alignItems: 'center',
+    marginTop: 20,
   },
   logoutButtonText: {
-    color: '#FF3B30',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   authButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    margin: 20,
+    marginTop: 20,
   },
   authButton: {
     flex: 1,
     backgroundColor: '#4CAF50',
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     marginHorizontal: 5,
@@ -161,4 +186,3 @@ const styles = StyleSheet.create({
 });
 
 export default AccountScreen;
-

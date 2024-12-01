@@ -195,7 +195,7 @@ const ProductListingScreen = ({ navigation, route }: any) => {
       {loading ? (
         <SkeletonLoader />
       ) : (
-        <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
+        <LinearGradient colors={['#dcf1f9', '#d3e6ef']} style={styles.container}>
           <FlatList
             data={data}
             renderItem={renderItem}

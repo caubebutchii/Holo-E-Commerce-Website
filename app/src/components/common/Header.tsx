@@ -61,13 +61,13 @@ const Header: React.FC<HeaderProps> = ({ title, onBackPress, showCart, transpare
   );
   return (
     <LinearGradient
-      colors={transparent ? ['rgba(249, 248, 247, 0.001)', 'rgba(249, 248, 247, 0.001)'] : ['#30C084', '#66FFCC']}
+      colors={transparent ? ['rgba(249, 248, 247, 0.001)', 'rgba(249, 248, 247, 0.001)'] : ['#dcf1f9', '#dcf1f9']}
       style={styles.gradient}
     >
       <View style={styles.container}>
         {onBackPress && (
           <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#007AFF" />
+            <Ionicons name="chevron-back" size={24} color="#323660" />
           </TouchableOpacity>
         )}
         <Text style={[styles.title, transparent && styles.transparentTitle]}>{title}</Text>
@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ title, onBackPress, showCart, transpare
             style={styles.cartButton}
             onPress={() => navigation.navigate('Checkout')}
           >
-            <Ionicons name="cart-outline" size={24} color={transparent ? "#1e1eed" : "#FFFFFF"} />
+            <Ionicons name="cart-outline" size={24} color={transparent ? "#1e1eed" : "#323660"} />
             {cartItemCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{cartItemCount}</Text>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#323660',
   },
   transparentTitle: {
     color: '#000000',

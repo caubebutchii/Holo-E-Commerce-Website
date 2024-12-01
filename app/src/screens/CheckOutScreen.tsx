@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#0dd7df',
   },
   productQuantity: {
     fontSize: 14,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   applyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0dd7df',
     padding: 8,
     borderRadius: 4,
     justifyContent: 'center',
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   nextButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0dd7df',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   payNowButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0dd7df',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   },
   addCardText: {
     marginLeft: 8,
-    color: '#007AFF',
+    color: '#0dd7df',
     fontSize: 16,
   },
   confirmationContainer: {
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   selectAllText: {
     marginLeft: 8,
     fontSize: 16,
-    color: '#007AFF',
+    color: '#0dd7df',
   },
   outOfStockContainer: {
     marginTop: 16,
@@ -715,6 +715,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    marginBottom:45
   },
   loginMessage: {
     fontSize: 16,
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   backButtonText: {
-    color: '#007AFF',
+    color: '#0dd7df',
     fontSize: 18,
     fontWeight: 'bold',
   },

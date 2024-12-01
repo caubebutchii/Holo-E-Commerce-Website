@@ -556,7 +556,7 @@ const HomeScreen = ({ navigation }: any) => {
   };
   return (
 
-    <LinearGradient colors={['#99FFEE', '#ffffff']} style={styles.container}>
+    <LinearGradient colors={['#dcf1f9', '#d3e6ef']} style={styles.container}>
       {/* {!hasAddedProducts && lamdep.length > 0 && (
         <AddProducts productsData={lamdep} onComplete={handleAddProductsComplete} />
       )} */}
