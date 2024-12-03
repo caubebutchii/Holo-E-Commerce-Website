@@ -38,7 +38,6 @@ const CheckoutScreen = ({ navigation, route }: any) => {
           if (productDoc.exists()) {
             const productData = productDoc.data();
             const availableQuantity = productData.colorImages[item.color]?.available_quantity || 0;
-            // consile.
             const prevQuantity = item.quantity;
             if (availableQuantity === 0) {
               return { ...item, prevQuantity: prevQuantity, quantity: 0, outOfStock: true };
@@ -59,10 +58,12 @@ const CheckoutScreen = ({ navigation, route }: any) => {
         }));
 
         await updateDoc(cartRef, { items: updatedItems });
-        const inStockItems = updatedItems.filter(item => !item.outOfStock);
-        const outOfStockItems = updatedItems.filter(item => item.outOfStock);
+        const inStockItems = updatedItems.filter(item => item.quantity > 0);
+        const outOfStockItems = updatedItems.filter(item => item.quantity === 0);
         setCartItems(inStockItems);
+        console.log('danh sach san pham trong gio hang', cartItems)
         cartItems.forEach(item => {
+        
           console.log(item)
         })
         setOutOfStockItems(outOfStockItems);
@@ -201,14 +202,18 @@ const CheckoutScreen = ({ navigation, route }: any) => {
                 paymentMethod: selectedPaymentMethod,
                 createdAt: serverTimestamp()
               });
+              const itemsRef = collection(db, 'items');
+              
 
               // Cập nhật số lượng sản phẩm trong 'items'
               for (const item of cartItems) {
                 if (selectedItems.includes(`${item.id}-${item.color}`)) {
                   const itemRef = doc(db, 'items', item.productRef);
-                  Alert.alert('itemRef', itemRef)
-                  const itemDoc = await getDoc(itemRef);
-                  console.log('itemDoc', itemDoc)
+                  // lấy ra item bằng id chứ ko bằng productRef nữa
+                  const q = query(itemsRef, where("id", "==", item.id));
+                  const querySnapshot = await getDocs(q);
+
+                  const itemDoc = querySnapshot.docs[0];
                   if (itemDoc.exists()) {
                     const itemData = itemDoc.data();
                     const availableQuantity = itemData.colorImages[item.color]?.available_quantity || 0;

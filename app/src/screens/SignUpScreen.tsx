@@ -12,23 +12,48 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
-import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
+import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { useUser } from '../context/UserContext'; // Import useUser
+import { useUser } from '../context/UserContext';
 
 const SignUpScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
-  const [showPassword, setShowPassword] = useState(false); //This is not used anymore but kept for consistency
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [errors, setErrors] = useState({});
   const [verificationCode, setVerificationCode] = useState('');
 
-  const { setUser } = useUser(); // Get setUser from context
+  const { setUser } = useUser();
+
+  const validatePassword = (password) => {
+    if (password.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      return 'Mật khẩu phải có ít nhất một chữ cái viết hoa, một chữ cái viết thường và một chữ số';
+    }
+    return '';
+  };
 
   const handleSignUp = async () => {
     const newErrors = {};
     if (name === '') newErrors.name = 'Họ tên không được để trống';
     if (email === '') newErrors.email = 'Email không được để trống';
+    if (password === '') newErrors.password = 'Mật khẩu không được để trống';
+    if (confirmPassword === '') newErrors.confirmPassword = 'Xác nhận mật khẩu không được để trống';
+    
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+      newErrors.password = passwordValidationError;
+    }
+
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Mật khẩu không khớp';
+    }
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
@@ -42,15 +67,15 @@ const SignUpScreen = ({ navigation }: any) => {
           return;
         }
 
-        // Create user without password
-        const userCredential = await createUserWithEmailAndPassword(auth, email, Math.random().toString(36).slice(-8));
+        // Create user with email and password
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
         // Generate and send verification code
         const code = generateVerificationCode();
         await sendVerificationCodeEmail(email, code);
 
-        navigation.navigate('VerificationWaiting', { email, code, name });
+        navigation.navigate('VerificationWaiting', { email, code, name, password });
       } catch (error) {
         Alert.alert('Lỗi', error.message);
       }
@@ -84,6 +109,37 @@ const SignUpScreen = ({ navigation }: any) => {
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
 
+        <View style={styles.inputContainer}>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Mật khẩu"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+            </TouchableOpacity>
+          </View>
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Xác nhận mật khẩu"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+              <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+            </TouchableOpacity>
+          </View>
+          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+        </View>
 
         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
           <Text style={styles.signUpButtonText}>ĐĂNG KÝ</Text>
@@ -140,6 +196,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 10,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 10,
   },
   errorText: {
     color: 'red',

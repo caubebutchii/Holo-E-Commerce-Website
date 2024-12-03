@@ -4,11 +4,12 @@ import { getAuth, onAuthStateChanged, sendEmailVerification } from 'firebase/aut
 import { app } from '../firebase/firebaseConfig';
 import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
 import { useUser } from '../context/UserContext'; // Import useUser
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const [isVerified, setIsVerified] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { email, code, name } = route.params;
+  const { email, code, name, password } = route.params;
   const [inputCode, setInputCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const { setUser } = useUser(); // Get setUser from context
@@ -47,7 +48,27 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
 
   const handleVerifyCode = async () => {
     if (inputCode.join('') === code) {
-      navigation.navigate('PasswordSetup', { email, name });
+      const auth = getAuth(app);
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const db = getFirestore(app);
+          const userData = {
+            id: user.uid,
+            name,
+            email,
+            phone: '',
+          };
+          await setDoc(doc(db, 'users', user.uid), userData);
+          setUser(userData);
+          navigation.navigate('Main');
+        } catch (error) {
+          console.error('Error saving user data:', error);
+          setError('Có lỗi xảy ra khi lưu thông tin người dùng');
+        }
+      } else {
+        setError('Không tìm thấy thông tin người dùng');
+      }
     } else {
       setError('Mã xác thực không đúng');
     }

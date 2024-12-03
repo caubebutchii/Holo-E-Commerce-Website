@@ -31,6 +31,8 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   const colorEntries = Object.entries(product.colorImages || {});
 
   useEffect(() => {
+    
+    console.log("product", product)
     const fetchProducts = async () => {
       try {
         let q = query(collection(db, 'items'), where('category', '==', product.category));
@@ -38,9 +40,13 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
         const fetchedProducts: any[] = [];
         querySnapshot.forEach((doc) => {
           fetchedProducts.push({ id: doc.id, ...doc.data() });
-          setProductRef(doc.id);
+          console.log(doc.id);
+          if(doc.data().id === product.id){
+            setProductRef(doc.id);
+            console.log("doc id",doc.id);
+          }
         });
-        setProducts(fetchedProducts);
+        
       } catch (error) {
         console.error("Error getting documents: ", error);
       }
@@ -59,6 +65,8 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       const itemsRef = collection(db, 'items');
       const q = query(itemsRef, where("id", "==", product.id));
       const querySnapshot = await getDocs(q);
+      // lấy ra docid của doc chứa product
+      console.log(product)
 
       if (querySnapshot.empty) {
         Alert.alert('Lỗi', 'Không tìm thấy sản phẩm');
