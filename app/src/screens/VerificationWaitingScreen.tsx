@@ -3,13 +3,12 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput,
 import { getAuth, onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useUser } from '../context/UserContext'; // Import useUser
 
 const VerificationWaitingScreen = ({ route, navigation }: any) => {
   const [isVerified, setIsVerified] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { email, code } = route.params;
+  const { email, code, name } = route.params;
   const [inputCode, setInputCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const { setUser } = useUser(); // Get setUser from context
@@ -48,27 +47,7 @@ const VerificationWaitingScreen = ({ route, navigation }: any) => {
 
   const handleVerifyCode = async () => {
     if (inputCode.join('') === code) {
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          const userData = {
-            id: user.uid,
-            name: route.params.name,
-            email: user.email,
-            phone: '',
-          };
-          await setDoc(doc(db, 'users', user.uid), userData);
-          setUser(userData); // Update user context
-          setIsVerified(true);
-          setTimeout(() => {
-            navigation.navigate('SignIn');
-          }, 2000);
-        } catch (error) {
-          console.error('Error saving user information:', error);
-        }
-      }
+      navigation.navigate('PasswordSetup', { email, name });
     } else {
       setError('Mã xác thực không đúng');
     }
@@ -227,3 +206,4 @@ const styles = StyleSheet.create({
 });
 
 export default VerificationWaitingScreen;
+

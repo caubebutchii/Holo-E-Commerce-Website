@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils'; // Import utility functions
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -18,8 +18,7 @@ import { useUser } from '../context/UserContext'; // Import useUser
 
 const SignUpScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); //This is not used anymore but kept for consistency
   const [name, setName] = useState('');
   const [errors, setErrors] = useState({});
   const [verificationCode, setVerificationCode] = useState('');
@@ -30,24 +29,25 @@ const SignUpScreen = ({ navigation }: any) => {
     const newErrors = {};
     if (name === '') newErrors.name = 'Họ tên không được để trống';
     if (email === '') newErrors.email = 'Email không được để trống';
-    if (password === '') newErrors.password = 'Password không được để trống';
     setErrors(newErrors);
 
-    // Nếu không có lỗi nào thì tiến hành đăng ký
     if (Object.keys(newErrors).length === 0) {
       try {
-        // Lấy auth từ app
         const auth = getAuth(app);
-        // Tạo tài khoản mới từ email và password
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Lấy thông tin user
+        
+        // Check if email is already in use
+        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+        if (signInMethods.length > 0) {
+          setErrors({ email: 'Email đã được sử dụng' });
+          return;
+        }
+
+        // Create user without password
+        const userCredential = await createUserWithEmailAndPassword(auth, email, Math.random().toString(36).slice(-8));
         const user = userCredential.user;
 
-        // Gửi mã xác thực qua email, tạo mã xác thực mới bằng hàm generateVerificationCode
+        // Generate and send verification code
         const code = generateVerificationCode();
-        // Lưu mã xác thực vào state
-        setVerificationCode(code);
-        // Gửi email xác thực
         await sendVerificationCodeEmail(email, code);
 
         navigation.navigate('VerificationWaiting', { email, code, name });
@@ -84,21 +84,6 @@ const SignUpScreen = ({ navigation }: any) => {
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
-            </TouchableOpacity>
-          </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-        </View>
 
         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
           <Text style={styles.signUpButtonText}>ĐĂNG KÝ</Text>
@@ -155,21 +140,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 10,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 10,
   },
   errorText: {
     color: 'red',
@@ -230,3 +200,4 @@ const styles = StyleSheet.create({
 });
 
 export default SignUpScreen;
+

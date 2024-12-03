@@ -38,7 +38,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
           if (productDoc.exists()) {
             const productData = productDoc.data();
             const availableQuantity = productData.colorImages[item.color]?.available_quantity || 0;
-            console.log('Available quantity for', item.name, item.color, availableQuantity);
+            // consile.
             const prevQuantity = item.quantity;
             if (availableQuantity === 0) {
               return { ...item, prevQuantity: prevQuantity, quantity: 0, outOfStock: true };
@@ -62,6 +62,9 @@ const CheckoutScreen = ({ navigation, route }: any) => {
         const inStockItems = updatedItems.filter(item => !item.outOfStock);
         const outOfStockItems = updatedItems.filter(item => item.outOfStock);
         setCartItems(inStockItems);
+        cartItems.forEach(item => {
+          console.log(item)
+        })
         setOutOfStockItems(outOfStockItems);
         calculateTotal(inStockItems);
       } else {
@@ -203,7 +206,9 @@ const CheckoutScreen = ({ navigation, route }: any) => {
               for (const item of cartItems) {
                 if (selectedItems.includes(`${item.id}-${item.color}`)) {
                   const itemRef = doc(db, 'items', item.productRef);
+                  Alert.alert('itemRef', itemRef)
                   const itemDoc = await getDoc(itemRef);
+                  console.log('itemDoc', itemDoc)
                   if (itemDoc.exists()) {
                     const itemData = itemDoc.data();
                     const availableQuantity = itemData.colorImages[item.color]?.available_quantity || 0;
@@ -211,6 +216,12 @@ const CheckoutScreen = ({ navigation, route }: any) => {
                     await updateDoc(itemRef, {
                       [`colorImages.${item.color}.available_quantity`]: newQuantity
                     });
+                  }
+                  else
+                  {
+                    console.log('Product not found:', item.id, typeof item.id);
+                    console.log('Product Ref: ', item.productRef, typeof item.productRef);
+                    Alert.alert('Lỗi', 'Không thể cập nhật số lượng sản phẩm. Vui lòng thử lại sau.');
                   }
                 }
               }
