@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signInButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',

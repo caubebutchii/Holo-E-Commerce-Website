@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   nextButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   payNowButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
