@@ -8,13 +8,13 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
-import { generateVerificationCode, sendVerificationCodeEmail } from '../utils/emailUtils';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useUser } from '../context/UserContext';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const SignUpScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -24,7 +24,7 @@ const SignUpScreen = ({ navigation }: any) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [errors, setErrors] = useState({});
-  const [verificationCode, setVerificationCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { setUser } = useUser();
 
@@ -57,21 +57,12 @@ const SignUpScreen = ({ navigation }: any) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+      setIsLoading(true);
       try {
         const auth = getAuth(app);
-        
-        // Kiểm tra xem email đã được sử dụng chưa
-        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-        if (signInMethods.length > 0) {
-          setErrors({ email: 'Email đã được sử dụng' });
-          return;
-        }
-
-        // Tạo người dùng với email và mật khẩu
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Lưu thông tin người dùng vào Firestore sử dụng UID làm document ID
         const db = getFirestore(app);
         await setDoc(doc(db, 'users', user.uid), {
           name,
@@ -79,22 +70,31 @@ const SignUpScreen = ({ navigation }: any) => {
           phone: '',
         });
 
-        // Tạo và gửi mã xác thực
-        const code = generateVerificationCode();
-        await sendVerificationCodeEmail(email, code);
+        setUser({
+          uid: user.uid,
+          name,
+          email,
+          phone: '',
+        });
 
         Alert.alert(
           'Đăng ký thành công',
-          'Vui lòng kiểm tra email của bạn để xác thực tài khoản.',
+          'Tài khoản của bạn đã được tạo.',
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('VerificationWaiting', { email, code, name, password }),
+              onPress: () => navigation.navigate('SignIn'),
             },
           ]
         );
       } catch (error) {
-        Alert.alert('Lỗi', error.message);
+        if (error.code === 'auth/email-already-in-use') {
+          Alert.alert('Lỗi', 'Email đã được sử dụng. Vui lòng đăng nhập.');
+        } else {
+          Alert.alert('Lỗi', error.message);
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -158,24 +158,13 @@ const SignUpScreen = ({ navigation }: any) => {
           {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
         </View>
 
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpButtonText}>ĐĂNG KÝ</Text>
+        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.signUpButtonText}>ĐĂNG KÝ</Text>
+          )}
         </TouchableOpacity>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>Đăng ký với</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <View style={styles.socialButtons}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="call-outline" size={24} color="#4CAF50" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="logo-google" size={24} color="#db4a39" />
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Đã có tài khoản? </Text>
@@ -246,34 +235,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ddd',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#777',
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -288,4 +249,3 @@ const styles = StyleSheet.create({
 });
 
 export default SignUpScreen;
-
