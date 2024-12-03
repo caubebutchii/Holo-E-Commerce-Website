@@ -302,80 +302,65 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   );
 
   const renderCart = () => (
-    <View style={styles.cartContainer}>
-      <ScrollView style={styles.scrollView}>
-        <Text style={styles.sectionTitle}>Giỏ hàng</Text>
-        {user?.uid ? (
-          <>
-            <TouchableOpacity style={styles.selectAllButton} onPress={toggleSelectAll}>
-              <Ionicons
-                name={selectedItems.length === cartItems.length ? 'checkbox' : 'square-outline'}
-                size={24}
-                color="#007AFF"
-              />
-              <Text style={styles.selectAllText}>Chọn tất cả</Text>
-            </TouchableOpacity>
-            <FlatList
-              data={cartItems}
-              renderItem={renderCartItem}
-              keyExtractor={(item, index) => `${item.id}-${item.color}-${index}`}
-              scrollEnabled={true}
-            />
-            {outOfStockItems.length > 0 && (
-              <View style={styles.outOfStockContainer}>
-                <TouchableOpacity 
-                  style={styles.outOfStockHeader} 
-                  onPress={() => setShowOutOfStock(!showOutOfStock)}
-                >
-                  <Text style={styles.outOfStockTitle}>Sản phẩm hết hàng ({outOfStockItems.length})</Text>
-                  <Ionicons 
-                    name={showOutOfStock ? 'chevron-up' : 'chevron-down'} 
-                    size={24} 
-                    color="#333"
+    <FlatList
+      data={[{ key: 'header' }, ...cartItems, { key: 'footer' }]}
+      renderItem={({ item }) => {
+        if (item.key === 'header') {
+          return (
+            <>
+              <Text style={styles.sectionTitle}>Giỏ hàng</Text>
+              {user?.uid && (
+                <TouchableOpacity style={styles.selectAllButton} onPress={toggleSelectAll}>
+                  <Ionicons
+                    name={selectedItems.length === cartItems.length ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color="#007AFF"
                   />
+                  <Text style={styles.selectAllText}>Chọn tất cả</Text>
                 </TouchableOpacity>
-                {showOutOfStock && (
-                  <FlatList
-                    data={outOfStockItems}
-                    renderItem={renderCartItem}
-                    keyExtractor={(item, index) => `outofstock-${item.id}-${item.color}-${index}`}
-                    scrollEnabled={true}
-                  />
-                )}
-              </View>
-            )}
-          </>
-        ) : (
-          <Text style={styles.loginMessage}>Vui lòng đăng nhập để xem giỏ hàng của bạn.</Text>
-        )}
-      </ScrollView>
-      {user?.uid && (
-        <View style={styles.fixedBottomContainer}>
-          <View style={styles.voucherContainer}>
-            <TextInput
-              style={styles.voucherInput}
-              placeholder="Nhập mã giảm giá"
-            />
-            <TouchableOpacity style={styles.applyButton}>
-              <Text style={styles.applyButtonText}>Áp dụng</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.total}>Tổng cộng: ₫{total.toLocaleString()}</Text>
-          <TouchableOpacity
-            style={styles.nextButton}
-            onPress={() => {
-              if (selectedItems.length === 0) {
-                Alert.alert('Lỗi', 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.');
-              } else {
-                setCheckoutStage('payment');
-              }
-            }}
-          >
-            <Text style={styles.nextButtonText}>Đặt hàng →</Text>
-          </TouchableOpacity>
-        </View>
+              )}
+            </>
+          );
+        }
+        if (item.key === 'footer') {
+          return (
+            <>
+              {outOfStockItems.length > 0 && (
+                <View style={styles.outOfStockContainer}>
+                  <TouchableOpacity 
+                    style={styles.outOfStockHeader} 
+                    onPress={() => setShowOutOfStock(!showOutOfStock)}
+                  >
+                    <Text style={styles.outOfStockTitle}>Sản phẩm hết hàng ({outOfStockItems.length})</Text>
+                    <Ionicons 
+                      name={showOutOfStock ? 'chevron-up' : 'chevron-down'} 
+                      size={24} 
+                      color="#333"
+                    />
+                  </TouchableOpacity>
+                  {showOutOfStock && (
+                    <FlatList
+                      data={outOfStockItems}
+                      renderItem={renderCartItem}
+                      keyExtractor={(item, index) => `outofstock-${item.id}-${item.color}-${index}`}
+                    />
+                  )}
+                </View>
+              )}
+            </>
+          );
+        }
+        return renderCartItem({ item });
+      }}
+      keyExtractor={(item, index) => 
+        item.key ? item.key : `${item.id}-${item.color}-${index}`
+      }
+      ListEmptyComponent={() => (
+        <Text style={styles.loginMessage}>
+          {user?.uid ? 'Giỏ hàng của bạn đang trống.' : 'Vui lòng đăng nhập để xem giỏ hàng của bạn.'}
+        </Text>
       )}
-    </View>
+    />
   );
 
   const renderPaymentMethod = (method, logo, lastDigits) => (
@@ -500,7 +485,37 @@ const CheckoutScreen = ({ navigation, route }: any) => {
     }
     switch (checkoutStage) {
       case 'cart':
-        return renderCart();
+        return (
+          <View style={styles.cartContainer}>
+            {renderCart()}
+            {user?.uid && (
+              <View style={styles.fixedBottomContainer}>
+                <View style={styles.voucherContainer}>
+                  <TextInput
+                    style={styles.voucherInput}
+                    placeholder="Nhập mã giảm giá"
+                  />
+                  <TouchableOpacity style={styles.applyButton}>
+                    <Text style={styles.applyButtonText}>Áp dụng</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.total}>Tổng cộng: ₫{total.toLocaleString()}</Text>
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={() => {
+                    if (selectedItems.length === 0) {
+                      Alert.alert('Lỗi', 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.');
+                    } else {
+                      setCheckoutStage('payment');
+                    }
+                  }}
+                >
+                  <Text style={styles.nextButtonText}>Đặt hàng →</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        );
       case 'payment':
         return renderPayment();
       default:
