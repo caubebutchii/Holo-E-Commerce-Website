@@ -5,17 +5,15 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
+  SafeAreaView,
   ScrollView,
-  SafeAreaView
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebase/firebaseConfig';
 import { useUser } from '../context/UserContext';
-import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
 
 const SignInScreen = ({ navigation }: any) => {
   const { setUser } = useUser();
@@ -23,134 +21,91 @@ const SignInScreen = ({ navigation }: any) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  // const handleSignIn = async () => {
-  //   const newErrors = {};
-  //   if (email === '') newErrors.email = 'Email không được để trống';
-  //   if (password === '') newErrors.password = 'Password không được để trống';
-  //   setErrors(newErrors);
-   
-  //   if (Object.keys(newErrors).length === 0) {
-  //   try {
-  //     const auth = getAuth(app);
-  //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  //     const user = userCredential.user;
-
-  //     // Fetch user information from Firestore
-  //     const db = getFirestore(app);
-  //     const userDoc = await getDoc(doc(db, 'users', user.uid));
-  //     if (userDoc.exists()) {
-  //       setUser(userDoc.data()); // Update user context
-  //     }
-
-  //     navigation.navigate('Main');
-  //   } catch (error) {
-  //     Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
-  //   }}
-  // };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    const newErrors = {};
-    if (email === '') newErrors.email = 'Email không được để trống';
-    if (password === '') newErrors.password = 'Password không được để trống';
-    setErrors(newErrors);
-   
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const auth = getAuth(app);
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+    setErrors({});
+    setIsLoading(true);
+    try {
+      const auth = getAuth(app);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        // Fetch user information from Firestore
-        const db = getFirestore(app);
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            uid: user.uid,
-            name: userData.name || '',
-            email: userData.email || '',
-            phone: userData.phone || ''
-          });
-          console.log('User data set in context:', userData);
-        } else {
-          console.log('No user document found in Firestore');
-        }
-
-        navigation.navigate('Main');
-      } catch (error) {
-        // console.error('Sign in error:', error);
-        Alert.alert('Lỗi', 'Email hoặc mật khẩu không đúng');
+      const db = getFirestore(app);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUser({
+          uid: user.uid,
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || ''
+        });
+        console.log('User data set in context:', userData);
+      } else {
+        console.log('No user document found in Firestore');
       }
-    }
-  };
 
-  const handleGoogleSignIn = async () => {
-    
+      navigation.navigate('Main');
+    } catch (error) {
+      // console.error('Sign in error:', error);
+      setErrors({ password: 'Email hoặc mật khẩu không đúng' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Đăng nhập</Text>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <Text style={styles.title}>Đăng nhập</Text>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <View style={styles.passwordContainer}>
+        <View style={styles.inputContainer}>
           <TextInput
-            style={styles.passwordInput}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Mật khẩu"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#777" />
+            </TouchableOpacity>
+          </View>
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+        </View>
+
+        <TouchableOpacity style={styles.forgotPasswordLink}>
+          <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.signInButton} onPress={handleSignIn} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.signInButtonText}>ĐĂNG NHẬP</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.signUpContainer}>
+          <Text style={styles.signUpText}>Chưa có tài khoản? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.signUpLink}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
-        {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-      </View>
-
-      <TouchableOpacity style={styles.forgotPasswordLink}>
-        <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-        <Text style={styles.signInButtonText}>ĐĂNG NHẬP</Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>Đăng nhập với</Text>
-        <View style={styles.dividerLine} />
-      </View>
-
-      <View style={styles.socialButtons}>
-        <TouchableOpacity style={styles.socialButton}>
-          <Ionicons name="logo-facebook" size={24} color="#3b5998" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Ionicons name="logo-google" size={24} color="#db4a39" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>Chưa có tài khoản? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.signUpLink}>Đăng ký</Text>
-        </TouchableOpacity>
-      </View>
-
-      
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -159,6 +114,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollView: {
+    flexGrow: 1,
     padding: 20,
     justifyContent: 'center',
   },
@@ -198,11 +156,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#4CAF50',
+    color: '#FF3B30',
     fontSize: 14,
   },
   signInButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#FF3B30',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
@@ -212,60 +170,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ddd',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#777',
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 20,
   },
   signUpText: {
     color: '#777',
   },
   signUpLink: {
-    color: '#4CAF50',
+    color: '#FF3B30',
     fontWeight: 'bold',
   },
-  activationMessage: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 20,
-  },
-  activationText: {
-    color: '#fff',
-    textAlign: 'center',
-  },
   errorText: {
-    color: 'red',
-    fontSize: 12,
+    color: '#FF3B30',
+    fontSize: 14,
     marginTop: 5,
   },
 });
 
 export default SignInScreen;
+

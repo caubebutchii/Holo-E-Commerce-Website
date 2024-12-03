@@ -36,7 +36,7 @@ const AccountScreen = ({ navigation }: any) => {
               setUser({ uid: '', name: '', email: '', phone: '', address: '' });
               setIsLoggedIn(false);
             } catch (error) {
-              console.error('Error signing out: ', error);
+              // console.error('Error signing out: ', error);
             }
           },
         },

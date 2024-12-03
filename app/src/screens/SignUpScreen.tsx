@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   signUpButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#FF3B30',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
@@ -238,14 +238,16 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 20,
   },
   loginText: {
     color: '#777',
   },
   loginLink: {
-    color: '#4CAF50',
+    color: '#FF3B30',
     fontWeight: 'bold',
   },
 });
 
 export default SignUpScreen;
+

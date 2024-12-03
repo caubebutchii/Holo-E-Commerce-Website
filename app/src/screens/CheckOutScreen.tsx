@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, TextInput, FlatList, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, TextInput, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../firebase/firebaseConfig';
@@ -20,8 +20,10 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   const [total, setTotal] = useState(0);
   const { user } = useUser();
   const [showOutOfStock, setShowOutOfStock] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchCartItems = useCallback(async () => {
+    setIsLoading(true);
     console.log('Fetching cart items for user:', user?.uid);
     setOrderPlaced(false);
     setCheckoutStage('cart');
@@ -79,6 +81,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
       setCartItems([]);
       setOutOfStockItems([]);
     }
+    setIsLoading(false);
   }, [user, calculateTotal]);
 
   const calculateTotal = useCallback((items) => {
@@ -184,6 +187,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
       return;
     }
 
+    setIsLoading(true);
     Alert.alert(
       'Xác nhận đặt hàng',
       'Bạn có chắc chắn muốn đặt hàng?',
@@ -243,6 +247,8 @@ const CheckoutScreen = ({ navigation, route }: any) => {
             } catch (error) {
               console.error("Error placing order: ", error);
               Alert.alert('Lỗi', 'Không thể đặt hàng. Vui lòng thử lại sau.');
+            } finally {
+              setIsLoading(false);
             }
           }
         }
@@ -313,7 +319,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
               data={cartItems}
               renderItem={renderCartItem}
               keyExtractor={(item, index) => `${item.id}-${item.color}-${index}`}
-              scrollEnabled={false}
+              scrollEnabled={true}
             />
             {outOfStockItems.length > 0 && (
               <View style={styles.outOfStockContainer}>
@@ -333,7 +339,7 @@ const CheckoutScreen = ({ navigation, route }: any) => {
                     data={outOfStockItems}
                     renderItem={renderCartItem}
                     keyExtractor={(item, index) => `outofstock-${item.id}-${item.color}-${index}`}
-                    scrollEnabled={false}
+                    scrollEnabled={true}
                   />
                 )}
               </View>
@@ -482,6 +488,13 @@ const CheckoutScreen = ({ navigation, route }: any) => {
   );
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF3B30" />
+        </View>
+      );
+    }
     if (orderPlaced) {
       return renderOrderConfirmation();
     }
@@ -599,7 +612,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   nextButton: {
-    backgroundColor: '#0dd7df',
+    backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -634,7 +647,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   payNowButton: {
-    backgroundColor: '#0dd7df',
+    backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -697,7 +710,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   backToHomeButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -780,6 +793,11 @@ const styles = StyleSheet.create({
   {
     // cho btn ẩn đi
     display: 'none'
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });
 
