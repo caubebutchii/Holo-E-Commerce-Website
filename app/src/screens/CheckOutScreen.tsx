@@ -23,6 +23,8 @@ const CheckoutScreen = ({ navigation, route }: any) => {
 
   const fetchCartItems = useCallback(async () => {
     console.log('Fetching cart items for user:', user?.uid);
+    setOrderPlaced(false);
+    setCheckoutStage('cart');
     if (user?.uid) {
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
@@ -459,13 +461,20 @@ const CheckoutScreen = ({ navigation, route }: any) => {
       </View>
       <TouchableOpacity
         style={styles.backToHomeButton}
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => {
+          setOrderPlaced(false);
+          setCheckoutStage('cart');
+          navigation.navigate('Home')}}
       >
         <Text style={styles.backToHomeButtonText}>Quay về trang chủ</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => setCheckoutStage('payment')}
+        style={!orderPlaced ? styles.backButton : styles.backToPaymentAfterOrder}
+        onPress={() => {
+          if(!orderPlaced)
+            setCheckoutStage('payment')
+          
+        }}
       >
         <Text style={styles.backButtonText}>← Quay lại thanh toán</Text>
       </TouchableOpacity>
@@ -767,6 +776,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  backToPaymentAfterOrder:
+  {
+    // cho btn ẩn đi
+    display: 'none'
+  }
 });
 
 export default CheckoutScreen;

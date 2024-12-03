@@ -60,22 +60,39 @@ const SignUpScreen = ({ navigation }: any) => {
       try {
         const auth = getAuth(app);
         
-        // Check if email is already in use
+        // Kiểm tra xem email đã được sử dụng chưa
         const signInMethods = await fetchSignInMethodsForEmail(auth, email);
         if (signInMethods.length > 0) {
           setErrors({ email: 'Email đã được sử dụng' });
           return;
         }
 
-        // Create user with email and password
+        // Tạo người dùng với email và mật khẩu
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Generate and send verification code
+        // Lưu thông tin người dùng vào Firestore sử dụng UID làm document ID
+        const db = getFirestore(app);
+        await setDoc(doc(db, 'users', user.uid), {
+          name,
+          email,
+          phone: '',
+        });
+
+        // Tạo và gửi mã xác thực
         const code = generateVerificationCode();
         await sendVerificationCodeEmail(email, code);
 
-        navigation.navigate('VerificationWaiting', { email, code, name, password });
+        Alert.alert(
+          'Đăng ký thành công',
+          'Vui lòng kiểm tra email của bạn để xác thực tài khoản.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('VerificationWaiting', { email, code, name, password }),
+            },
+          ]
+        );
       } catch (error) {
         Alert.alert('Lỗi', error.message);
       }
