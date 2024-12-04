@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   authButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0dd7df',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',

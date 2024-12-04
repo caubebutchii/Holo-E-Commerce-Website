@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   signUpButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#0dd7df',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',

@@ -82,6 +82,7 @@ const ProductListingScreen = ({ navigation, route }: any) => {
       });
 
       setFilteredProducts(filtered);
+      setCurrentSearchQuery('');
     }
   }, [filters, products]);
   const handleCategoryPress = (category: any) => {
